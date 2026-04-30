@@ -32,10 +32,14 @@ const useCart = () => {
   const [updateCartItemApi] = useUpdateCartItemMutation();
   const [clearCartApi] = useClearCartMutation();
 
-  const handleAddToCart = async (producto, cantidad = 1) => {
+  const handleAddToCart = async (producto, cantidad = 1, talla, color) => {
+    if (!talla || !color) {
+      toast.error('Debes seleccionar talla y color');
+      return;
+    }
     if (user) {
       try {
-        const result = await addToCartApi({ productoId: producto._id, cantidad }).unwrap();
+        const result = await addToCartApi({ productoId: producto._id, cantidad, talla, color }).unwrap();
         if (result?.items) dispatch(setItems(result.items));
         toast.success('Agregado al carrito', { duration: 1500 });
       } catch (err) {
@@ -43,15 +47,15 @@ const useCart = () => {
         return;
       }
     } else {
-      dispatch(addItem({ producto, cantidad }));
+      dispatch(addItem({ producto, cantidad, talla, color }));
       toast.success('Agregado al carrito', { duration: 1500 });
     }
   };
 
-  const handleRemove = async (productoId) => {
+  const handleRemove = async (productoId, talla, color) => {
     if (user) {
       try {
-        const result = await removeFromCartApi(productoId).unwrap();
+        const result = await removeFromCartApi({ productoId, talla, color }).unwrap();
         if (result?.items) dispatch(setItems(result.items));
       } catch {
         dispatch(removeItem(productoId));
@@ -61,14 +65,14 @@ const useCart = () => {
     }
   };
 
-  const handleUpdate = async (productoId, cantidad) => {
+  const handleUpdate = async (productoId, cantidad, talla, color) => {
     if (user) {
       try {
         if (cantidad <= 0) {
-          const result = await removeFromCartApi(productoId).unwrap();
+          const result = await removeFromCartApi({ productoId, talla, color }).unwrap();
           if (result?.items) dispatch(setItems(result.items));
         } else {
-          const result = await updateCartItemApi({ productoId, cantidad }).unwrap();
+          const result = await updateCartItemApi({ productoId, cantidad, talla, color }).unwrap();
           if (result?.items) dispatch(setItems(result.items));
         }
       } catch {

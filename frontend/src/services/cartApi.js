@@ -15,15 +15,18 @@ export const cartApi = baseApi.injectEndpoints({
       invalidatesTags: ['Cart'],
     }),
     updateCartItem: builder.mutation({
-      query: ({ productoId, cantidad }) => ({
+      query: ({ productoId, cantidad, talla, color }) => ({
         url: `/cart/${productoId}`,
         method: 'PUT',
-        body: { cantidad },
+        body: { cantidad, talla, color },
       }),
       invalidatesTags: ['Cart'],
     }),
     removeFromCart: builder.mutation({
-      query: (productoId) => ({ url: `/cart/${productoId}`, method: 'DELETE' }),
+      query: ({ productoId, talla, color }) => ({ 
+        url: `/cart/${productoId}?talla=${encodeURIComponent(talla || '')}&color=${encodeURIComponent(color || '')}`, 
+        method: 'DELETE' 
+      }),
       invalidatesTags: ['Cart'],
     }),
     clearCart: builder.mutation({

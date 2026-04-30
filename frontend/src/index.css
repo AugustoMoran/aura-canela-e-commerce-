@@ -7,7 +7,7 @@
     scroll-behavior: smooth;
   }
   body {
-    @apply font-sans bg-[#FACC15] text-gray-900 antialiased;
+    @apply font-sans bg-white text-gray-900 antialiased;
   }
   * {
     @apply box-border;

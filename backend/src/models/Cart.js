@@ -4,6 +4,8 @@ const cartItemSchema = new mongoose.Schema(
   {
     producto: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
     cantidad: { type: Number, required: true, min: 1, default: 1 },
+    talla: { type: String, required: true },
+    color: { type: String, required: true },
   },
   { _id: false }
 );

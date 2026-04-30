@@ -2,7 +2,7 @@ const transporter = require('../config/mailer');
 
 const formatOrderItems = (items) => {
   return items
-    .map((i) => `- ${i.nombre} x${i.cantidad} = $${(i.precio * i.cantidad).toFixed(2)}`)
+    .map((i) => `- ${i.nombre} x${i.cantidad} (Talla: ${i.talla}, Color: ${i.color}) = $${(i.precio * i.cantidad).toFixed(2)}`)
     .join('\n');
 };
 

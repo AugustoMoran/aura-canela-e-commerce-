@@ -22,12 +22,16 @@ const cartSlice = createSlice({
   initialState,
   reducers: {
     addItem: (state, action) => {
-      const { producto, cantidad = 1 } = action.payload;
-      const existing = state.items.find((i) => i.producto === producto._id || i.producto?._id === producto._id);
+      const { producto, cantidad = 1, talla, color } = action.payload;
+      const productoId = producto._id || producto;
+      const existing = state.items.find((i) => {
+        const itemProductoId = i.producto._id || i.producto;
+        return itemProductoId === productoId && i.talla === talla && i.color === color;
+      });
       if (existing) {
         existing.cantidad += cantidad;
       } else {
-        state.items.push({ producto, cantidad });
+        state.items.push({ producto, cantidad, talla, color });
       }
       saveToStorage(state.items);
     },

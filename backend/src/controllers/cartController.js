@@ -20,8 +20,11 @@ const syncCart = async (req, res, next) => {
 
 const addItem = async (req, res, next) => {
   try {
-    const { productoId, cantidad } = req.body;
-    const cart = await cartService.addToCart(req.user._id, productoId, cantidad);
+    const { productoId, cantidad, talla, color } = req.body;
+    if (!talla || !color) {
+      return res.status(400).json({ message: 'Talla y color son requeridos' });
+    }
+    const cart = await cartService.addToCart(req.user._id, productoId, cantidad, talla, color);
     res.json(cart);
   } catch (error) {
     next(error);
@@ -30,7 +33,8 @@ const addItem = async (req, res, next) => {
 
 const updateItem = async (req, res, next) => {
   try {
-    const cart = await cartService.updateCartItem(req.user._id, req.params.productoId, req.body.cantidad);
+    const { cantidad, talla, color } = req.body;
+    const cart = await cartService.updateCartItem(req.user._id, req.params.productoId, cantidad, talla, color);
     res.json(cart);
   } catch (error) {
     next(error);
@@ -39,7 +43,8 @@ const updateItem = async (req, res, next) => {
 
 const removeItem = async (req, res, next) => {
   try {
-    const cart = await cartService.removeFromCart(req.user._id, req.params.productoId);
+    const { talla, color } = req.query;
+    const cart = await cartService.removeFromCart(req.user._id, req.params.productoId, talla, color);
     res.json(cart);
   } catch (error) {
     next(error);

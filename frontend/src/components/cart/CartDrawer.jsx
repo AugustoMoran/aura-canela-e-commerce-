@@ -70,17 +70,21 @@ const CartDrawer = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium line-clamp-2 mb-1">{nombre}</p>
-                      <p className="text-xs text-gray-500 mb-2">{formatCurrency(price)} c/u</p>
+                      <div className="text-xs text-gray-500 mb-2 space-y-0.5">
+                        <p>{formatCurrency(price)} c/u</p>
+                        {item.talla && <p>Talla: <span className="font-medium">{item.talla}</span></p>}
+                        {item.color && <p>Color: <span className="font-medium">{item.color}</span></p>}
+                      </div>
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => updateQuantity(id, item.cantidad - 1)}
+                          onClick={() => updateQuantity(id, item.cantidad - 1, item.talla, item.color)}
                           className="w-6 h-6 rounded-full border border-gray-300 flex items-center justify-center text-sm hover:bg-gray-100"
                         >
                           -
                         </button>
                         <span className="text-sm font-medium w-5 text-center">{item.cantidad}</span>
                         <button
-                          onClick={() => updateQuantity(id, item.cantidad + 1)}
+                          onClick={() => updateQuantity(id, item.cantidad + 1, item.talla, item.color)}
                           className="w-6 h-6 rounded-full border border-gray-300 flex items-center justify-center text-sm hover:bg-gray-100"
                         >
                           +
@@ -89,7 +93,7 @@ const CartDrawer = () => {
                     </div>
                     <div className="flex flex-col items-end justify-between">
                       <button
-                        onClick={() => removeFromCart(id)}
+                        onClick={() => removeFromCart(id, item.talla, item.color)}
                         className="text-gray-400 hover:text-red-500 transition-colors p-1"
                       >
                         <HiOutlineTrash size={16} />

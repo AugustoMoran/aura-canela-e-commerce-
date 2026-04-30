@@ -8,6 +8,15 @@ const mediaSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const colorSchema = new mongoose.Schema(
+  {
+    nombre: { type: String, required: true, trim: true },
+    codigo: { type: String, required: true },
+    habilitado: { type: Boolean, default: true },
+  },
+  { _id: false }
+);
+
 const productSchema = new mongoose.Schema(
   {
     nombre: { type: String, required: true, trim: true },
@@ -19,6 +28,14 @@ const productSchema = new mongoose.Schema(
     imagenes: [mediaSchema],
     videos: [mediaSchema],
     tags: [{ type: String, trim: true }],
+    
+    // Tallas y colores (max 8 colores)
+    tallas: {
+      habilitadas: [{ type: String, trim: true }],
+      rango: { type: String, default: '' },
+    },
+    colores: [colorSchema],
+    
     isActive: { type: Boolean, default: true },
     deletedAt: { type: Date, default: null },
     vendidos: { type: Number, default: 0 },
