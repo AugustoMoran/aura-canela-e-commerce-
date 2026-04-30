@@ -26,11 +26,14 @@ const ProductDetail = () => {
   const [selectedColor, setSelectedColor] = useState('');
 
   const handleBuyWithMP = () => {
-    if (!selectedTalla || !selectedColor) {
+    const needsTalla = product.tallas?.habilitadas?.length > 0;
+    const needsColor = product.colores?.length > 0;
+    
+    if ((needsTalla && !selectedTalla) || (needsColor && !selectedColor)) {
       alert('Por favor selecciona talla y color');
       return;
     }
-    addToCart(product, qty, selectedTalla, selectedColor);
+    addToCart(product, qty, selectedTalla || null, selectedColor || null);
     navigate('/checkout');
   };
 
@@ -261,11 +264,14 @@ const ProductDetail = () => {
 
               <button
                 onClick={() => {
-                  if (!selectedTalla || !selectedColor) {
+                  const needsTalla = product.tallas?.habilitadas?.length > 0;
+                  const needsColor = product.colores?.length > 0;
+                  
+                  if ((needsTalla && !selectedTalla) || (needsColor && !selectedColor)) {
                     alert('Por favor selecciona talla y color');
                     return;
                   }
-                  addToCart(product, qty, selectedTalla, selectedColor);
+                  addToCart(product, qty, selectedTalla || null, selectedColor || null);
                 }}
                 className="btn-primary w-full flex items-center justify-center gap-2 py-3"
               >
@@ -277,7 +283,10 @@ const ProductDetail = () => {
                 <button
                   onClick={handleBuyWithMP}
                   className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl transition-all active:scale-95 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={!selectedTalla || !selectedColor}
+                  disabled={
+                    (product.tallas?.habilitadas?.length > 0 && !selectedTalla) ||
+                    (product.colores?.length > 0 && !selectedColor)
+                  }
                 >
                   <FaCreditCard size={20} />
                   <div className="flex flex-col items-center">
@@ -288,12 +297,15 @@ const ProductDetail = () => {
 
                 <a
                   onClick={(e) => {
-                    if (!selectedTalla || !selectedColor) {
+                    const needsTalla = product.tallas?.habilitadas?.length > 0;
+                    const needsColor = product.colores?.length > 0;
+                    
+                    if ((needsTalla && !selectedTalla) || (needsColor && !selectedColor)) {
                       e.preventDefault();
                       alert('Por favor selecciona talla y color');
                     }
                   }}
-                  href={selectedTalla && selectedColor ? waLink : '#'}
+                  href={(product.tallas?.habilitadas?.length === 0 || selectedTalla) && (product.colores?.length === 0 || selectedColor) ? waLink : '#'}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-3 rounded-xl transition-all active:scale-95 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"

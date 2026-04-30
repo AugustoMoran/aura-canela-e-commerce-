@@ -24,13 +24,19 @@ const createOrder = async ({ userId, guestData, items, cuponCodigo, metodoPago }
       );
     }
 
-    // Validar talla y color
-    if (!product.tallas.habilitadas.includes(item.talla)) {
-      throw Object.assign(new Error(`Talla no disponible: ${item.talla}`), { statusCode: 400 });
+    // Validar talla solo si el producto tiene tallas habilitadas
+    if (product.tallas?.habilitadas?.length > 0 && item.talla) {
+      if (!product.tallas.habilitadas.includes(item.talla)) {
+        throw Object.assign(new Error(`Talla no disponible: ${item.talla}`), { statusCode: 400 });
+      }
     }
-    const colorDisponible = product.colores.find(c => c.nombre === item.color || c.codigo === item.color);
-    if (!colorDisponible || !colorDisponible.habilitado) {
-      throw Object.assign(new Error(`Color no disponible: ${item.color}`), { statusCode: 400 });
+    
+    // Validar color solo si el producto tiene colores
+    if (product.colores?.length > 0 && item.color) {
+      const colorDisponible = product.colores.find(c => c.nombre === item.color || c.codigo === item.color);
+      if (!colorDisponible || !colorDisponible.habilitado) {
+        throw Object.assign(new Error(`Color no disponible: ${item.color}`), { statusCode: 400 });
+      }
     }
 
     orderItems.push({

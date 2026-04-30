@@ -21,9 +21,6 @@ const syncCart = async (req, res, next) => {
 const addItem = async (req, res, next) => {
   try {
     const { productoId, cantidad, talla, color } = req.body;
-    if (!talla || !color) {
-      return res.status(400).json({ message: 'Talla y color son requeridos' });
-    }
     const cart = await cartService.addToCart(req.user._id, productoId, cantidad, talla, color);
     res.json(cart);
   } catch (error) {

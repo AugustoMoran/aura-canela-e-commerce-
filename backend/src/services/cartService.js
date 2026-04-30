@@ -35,13 +35,19 @@ const addToCart = async (userId, productoId, cantidad = 1, talla, color) => {
   const product = await Product.findOne({ _id: productoId, isActive: true });
   if (!product) throw Object.assign(new Error('Producto no encontrado.'), { statusCode: 404 });
 
-  // Validar talla y color
-  if (!product.tallas.habilitadas.includes(talla)) {
-    throw Object.assign(new Error('Talla no disponible.'), { statusCode: 400 });
+  // Solo validar talla si el producto tiene tallas habilitadas
+  if (product.tallas?.habilitadas?.length > 0 && talla) {
+    if (!product.tallas.habilitadas.includes(talla)) {
+      throw Object.assign(new Error('Talla no disponible.'), { statusCode: 400 });
+    }
   }
-  const colorDisponible = product.colores.find(c => c.nombre === color || c.codigo === color);
-  if (!colorDisponible || !colorDisponible.habilitado) {
-    throw Object.assign(new Error('Color no disponible.'), { statusCode: 400 });
+  
+  // Solo validar color si el producto tiene colores
+  if (product.colores?.length > 0 && color) {
+    const colorDisponible = product.colores.find(c => c.nombre === color || c.codigo === color);
+    if (!colorDisponible || !colorDisponible.habilitado) {
+      throw Object.assign(new Error('Color no disponible.'), { statusCode: 400 });
+    }
   }
 
   let cart = await Cart.findOne({ usuario: userId });
@@ -71,15 +77,23 @@ const updateCartItem = async (userId, productoId, cantidad, talla, color) => {
   const cart = await Cart.findOne({ usuario: userId });
   if (!cart) throw Object.assign(new Error('Carrito no encontrado.'), { statusCode: 404 });
 
-  const item = cart.items.find((i) => 
-    i.producto.toString() === productoId && i.talla === talla && i.color === color
-  );
+  // Buscar item - siendo flexible con talla/color que pueden ser null
+  const item = cart.items.find((i) => {
+    const productIdMatch = i.producto.toString() === productoId;
+    const tallaMatch = (talla === null || talla === undefined) ? (i.talla === null || i.talla === undefined) : i.talla === talla;
+    const colorMatch = (color === null || color === undefined) ? (i.color === null || i.color === undefined) : i.color === color;
+    return productIdMatch && tallaMatch && colorMatch;
+  });
+  
   if (!item) throw Object.assign(new Error('Item no encontrado.'), { statusCode: 404 });
 
   if (cantidad <= 0) {
-    cart.items = cart.items.filter((i) => 
-      !(i.producto.toString() === productoId && i.talla === talla && i.color === color)
-    );
+    cart.items = cart.items.filter((i) => {
+      const productIdMatch = i.producto.toString() === productoId;
+      const tallaMatch = (talla === null || talla === undefined) ? (i.talla === null || i.talla === undefined) : i.talla === talla;
+      const colorMatch = (color === null || color === undefined) ? (i.color === null || i.color === undefined) : i.color === color;
+      return !(productIdMatch && tallaMatch && colorMatch);
+    });
   } else {
     item.cantidad = cantidad;
   }
@@ -92,9 +106,13 @@ const removeFromCart = async (userId, productoId, talla, color) => {
   const cart = await Cart.findOne({ usuario: userId });
   if (!cart) return { items: [] };
 
-  cart.items = cart.items.filter((i) => 
-    !(i.producto.toString() === productoId && i.talla === talla && i.color === color)
-  );
+  cart.items = cart.items.filter((i) => {
+    const productIdMatch = i.producto.toString() === productoId;
+    const tallaMatch = (talla === null || talla === undefined) ? (i.talla === null || i.talla === undefined) : i.talla === talla;
+    const colorMatch = (color === null || color === undefined) ? (i.color === null || i.color === undefined) : i.color === color;
+    return !(productIdMatch && tallaMatch && colorMatch);
+  });
+  
   await cart.save();
   return getCart(userId);
 };
