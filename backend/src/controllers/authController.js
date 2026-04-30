@@ -1,5 +1,5 @@
 const authService = require('../services/authService');
-const { generateAccessToken, generateRefreshToken, setRefreshTokenCookie, clearRefreshTokenCookie } = require('../utils/generateToken');
+const { generateAccessToken, generateRefreshToken, setRefreshTokenCookie, setAccessTokenCookie, clearRefreshTokenCookie, clearAccessTokenCookie } = require('../utils/generateToken');
 
 const register = async (req, res, next) => {
   try {
@@ -8,6 +8,7 @@ const register = async (req, res, next) => {
 
     const accessToken = generateAccessToken(user._id);
     const refreshToken = await generateRefreshToken(user._id);
+    setAccessTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, refreshToken);
 
     // Merge guest cart on register
@@ -37,6 +38,7 @@ const login = async (req, res, next) => {
 
     const accessToken = generateAccessToken(user._id);
     const refreshToken = await generateRefreshToken(user._id);
+    setAccessTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, refreshToken);
 
     // Merge guest cart on login
@@ -67,6 +69,7 @@ const refresh = async (req, res, next) => {
     }
 
     const { accessToken, refreshToken } = await authService.refreshTokens(oldToken);
+    setAccessTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, refreshToken);
 
     res.json({ accessToken });
@@ -79,6 +82,8 @@ const logout = async (req, res, next) => {
   try {
     const token = req.cookies.refreshToken;
     await authService.logout(token, res);
+    clearAccessTokenCookie(res);
+    clearRefreshTokenCookie(res);
     res.json({ message: 'Sesión cerrada.' });
   } catch (error) {
     next(error);

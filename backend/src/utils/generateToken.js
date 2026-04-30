@@ -26,13 +26,29 @@ const setRefreshTokenCookie = (res, token) => {
   });
 };
 
+const setAccessTokenCookie = (res, token) => {
+  res.cookie('accessToken', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+    maxAge: 15 * 60 * 1000, // 15 minutes
+    path: '/',
+  });
+};
+
 const clearRefreshTokenCookie = (res) => {
   res.clearCookie('refreshToken', { path: '/' });
+};
+
+const clearAccessTokenCookie = (res) => {
+  res.clearCookie('accessToken', { path: '/' });
 };
 
 module.exports = {
   generateAccessToken,
   generateRefreshToken,
   setRefreshTokenCookie,
+  setAccessTokenCookie,
   clearRefreshTokenCookie,
+  clearAccessTokenCookie,
 };

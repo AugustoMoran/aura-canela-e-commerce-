@@ -5,13 +5,9 @@ const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 const baseQuery = fetchBaseQuery({
   baseUrl: BASE_URL,
-  credentials: 'include',
-  prepareHeaders: (headers, { getState }) => {
-    const token = getState().auth.accessToken;
-    console.log('🔐 Token en request:', token ? `Bearer ${token.substring(0, 20)}...` : 'NO TOKEN');
-    if (token) {
-      headers.set('Authorization', `Bearer ${token}`);
-    }
+  credentials: 'include', // 🔒 Cookies enviadas automáticamente (accessToken + refreshToken)
+  prepareHeaders: (headers) => {
+    // El token va en cookies HTTP-only, no en headers
     return headers;
   },
 });
