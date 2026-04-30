@@ -99,7 +99,18 @@ const createOrder = async ({ userId, guestData, items, cuponCodigo, metodoPago }
   // WhatsApp: deducted in finalizeOrder when the admin dispatches.
 
   // Send notifications
-  const emailRecipient = userId ? null : guestData?.email;
+  // Get email from user or guest data
+  let emailRecipient = null;
+  if (userId) {
+    // For logged-in users, fetch their email from the database
+    const User = require('../models/User');
+    const user = await User.findById(userId);
+    emailRecipient = user?.email;
+  } else {
+    // For guests, use provided email
+    emailRecipient = guestData?.email;
+  }
+
   if (emailRecipient) {
     sendOrderConfirmationToUser(emailRecipient, order).catch(console.error);
   }
