@@ -246,6 +246,10 @@ const OrdersAdmin = () => {
                 </tr>
               )}
             </React.Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {/* Pagination */}
       {data && data.pages > 1 && (
