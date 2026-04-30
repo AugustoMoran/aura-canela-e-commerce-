@@ -19,8 +19,20 @@ import toast from 'react-hot-toast';
 import { HiOutlinePlus, HiOutlineTrash, HiOutlinePencil, HiX, HiOutlinePhotograph, HiOutlineSearch, HiOutlineRefresh, HiOutlineFilm } from 'react-icons/hi';
 
 const MAX_IMAGES = 7;
+const TALLAS_DISPONIBLES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+
 // Normalizar a strings para consistency (HTML input values son siempre strings)
-const EMPTY = { nombre: '', descripcion: '', precio: '', precioOferta: '', stock: '', categoria: '', tags: '' };
+const EMPTY = { 
+  nombre: '', 
+  descripcion: '', 
+  precio: '', 
+  precioOferta: '', 
+  stock: '', 
+  categoria: '', 
+  tags: '',
+  tallas: { habilitadas: [], rango: '' },
+  colores: []
+};
 
 const normalizeForm = (formData) => ({
   nombre: String(formData.nombre || ''),
@@ -30,6 +42,8 @@ const normalizeForm = (formData) => ({
   stock: String(formData.stock || ''),
   categoria: String(formData.categoria || ''),
   tags: String(formData.tags || ''),
+  tallas: formData.tallas || { habilitadas: [], rango: '' },
+  colores: formData.colores || [],
 });
 
 const ProductsAdmin = () => {
@@ -65,6 +79,7 @@ const ProductsAdmin = () => {
   const [newVideoPreviews, setNewVideoPreviews] = useState([]);
   const [restockId, setRestockId] = useState(null);
   const [restockQty, setRestockQty] = useState('');
+  const [nuevoColor, setNuevoColor] = useState({ nombre: '', codigo: '#000000', habilitado: true });
 
   const existingImages = editingProduct?.imagenes || [];
   const existingVideos = editingProduct?.videos || [];
@@ -109,6 +124,46 @@ const ProductsAdmin = () => {
     setNewVideoPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const toggleTalla = (talla) => {
+    setForm((prev) => {
+      const habilitadas = prev.tallas.habilitadas.includes(talla)
+        ? prev.tallas.habilitadas.filter((t) => t !== talla)
+        : [...prev.tallas.habilitadas, talla];
+      return { ...prev, tallas: { ...prev.tallas, habilitadas } };
+    });
+  };
+
+  const agregarColor = () => {
+    if (!nuevoColor.nombre.trim()) {
+      toast.error('El color debe tener un nombre');
+      return;
+    }
+    if (form.colores.length >= 8) {
+      toast.error('Máximo 8 colores por producto');
+      return;
+    }
+    setForm((prev) => ({
+      ...prev,
+      colores: [...prev.colores, { ...nuevoColor }]
+    }));
+    setNuevoColor({ nombre: '', codigo: '#000000', habilitado: true });
+  };
+
+  const removerColor = (index) => {
+    setForm((prev) => ({
+      ...prev,
+      colores: prev.colores.filter((_, i) => i !== index)
+    }));
+  };
+
+  const toggleColorHabilitado = (index) => {
+    setForm((prev) => {
+      const colores = [...prev.colores];
+      colores[index].habilitado = !colores[index].habilitado;
+      return { ...prev, colores };
+    });
+  };
+
   const handleRemoveExistingVideo = async (publicId) => {
     if (!editingProduct) return;
     try {
@@ -139,6 +194,8 @@ const ProductsAdmin = () => {
         stock: Number(form.stock) || 0,
         categoria: form.categoria || undefined,
         tags: form.tags ? form.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
+        tallas: form.tallas,
+        colores: form.colores,
       };
 
       let productId = editing;
@@ -173,6 +230,7 @@ const ProductsAdmin = () => {
       setNewImagePreviews([]);
       setNewVideoFiles([]);
       setNewVideoPreviews([]);
+      setNuevoColor({ nombre: '', codigo: '#000000', habilitado: true });
     } catch (err) {
       toast.error(err?.data?.message || 'Error al guardar');
     } finally {
@@ -190,6 +248,8 @@ const ProductsAdmin = () => {
       stock: p.stock,
       categoria: p.categoria?._id || p.categoria || '',
       tags: p.tags?.join(', ') || '',
+      tallas: p.tallas || { habilitadas: [], rango: '' },
+      colores: p.colores || [],
     }));
     setEditing(p._id);
     setEditingProduct(p);
@@ -198,6 +258,7 @@ const ProductsAdmin = () => {
     setNewImagePreviews([]);
     setNewVideoFiles([]);
     setNewVideoPreviews([]);
+    setNuevoColor({ nombre: '', codigo: '#000000', habilitado: true });
   };
 
   const handleDelete = async (id) => {
@@ -237,7 +298,7 @@ const ProductsAdmin = () => {
     <AdminLayout>
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">Productos</h1>
-        <button onClick={() => { setShowForm(true); setEditing(null); setEditingProduct(null); setForm(EMPTY); setNewImageFiles([]); setNewImagePreviews([]); setNewVideoFiles([]); setNewVideoPreviews([]); }} className="btn-primary flex items-center gap-2">
+        <button onClick={() => { setShowForm(true); setEditing(null); setEditingProduct(null); setForm(EMPTY); setNewImageFiles([]); setNewImagePreviews([]); setNewVideoFiles([]); setNewVideoPreviews([]); setNuevoColor({ nombre: '', codigo: '#000000', habilitado: true }); }} className="btn-primary flex items-center gap-2">
           <HiOutlinePlus size={16} /> Nuevo producto
         </button>
       </div>
@@ -348,6 +409,121 @@ const ProductsAdmin = () => {
             <div className="md:col-span-2">
               <label className="block text-sm font-medium mb-1">Tags (separados por coma)</label>
               <input type="text" value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} className="input-field" placeholder="verano, oferta, nuevo" />
+            </div>
+
+            {/* Tallas section */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium mb-2">Tallas disponibles</label>
+              <div className="flex flex-wrap gap-2">
+                {TALLAS_DISPONIBLES.map((talla) => (
+                  <button
+                    key={talla}
+                    type="button"
+                    onClick={() => toggleTalla(talla)}
+                    className={`px-3 py-2 rounded-lg font-medium border-2 transition-colors ${
+                      form.tallas.habilitadas.includes(talla)
+                        ? 'border-yellow-400 bg-yellow-100 text-gray-900'
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    {talla}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-3">
+                <label className="block text-xs font-medium text-gray-600 mb-1">Rango (ej: XS-XL)</label>
+                <input
+                  type="text"
+                  value={form.tallas.rango}
+                  onChange={(e) => setForm({ ...form, tallas: { ...form.tallas, rango: e.target.value } })}
+                  className="input-field text-sm"
+                  placeholder="Opcional: descripción del rango"
+                />
+              </div>
+            </div>
+
+            {/* Colores section */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium mb-2">Colores ({form.colores.length}/8)</label>
+              
+              {/* Add new color */}
+              <div className="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-2">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Nombre del color</label>
+                    <input
+                      type="text"
+                      value={nuevoColor.nombre}
+                      onChange={(e) => setNuevoColor({ ...nuevoColor, nombre: e.target.value })}
+                      className="input-field text-sm"
+                      placeholder="ej: Rojo, Azul oscuro"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Código de color</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="color"
+                        value={nuevoColor.codigo}
+                        onChange={(e) => setNuevoColor({ ...nuevoColor, codigo: e.target.value })}
+                        className="w-12 h-9 rounded border border-gray-300 cursor-pointer"
+                      />
+                      <input
+                        type="text"
+                        value={nuevoColor.codigo}
+                        onChange={(e) => setNuevoColor({ ...nuevoColor, codigo: e.target.value })}
+                        className="input-field text-sm flex-1"
+                        placeholder="#000000"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-end">
+                    <button
+                      type="button"
+                      onClick={agregarColor}
+                      disabled={form.colores.length >= 8}
+                      className="w-full btn-primary text-sm"
+                    >
+                      + Agregar color
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* List of colors */}
+              {form.colores.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {form.colores.map((color, i) => (
+                    <div key={i} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                      <div
+                        className="w-8 h-8 rounded-full border-2 border-gray-300 flex-shrink-0"
+                        style={{ backgroundColor: color.codigo }}
+                        title={color.codigo}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">{color.nombre}</p>
+                        <p className="text-xs text-gray-500">{color.codigo}</p>
+                      </div>
+                      <label className="flex items-center gap-1 cursor-pointer flex-shrink-0">
+                        <input
+                          type="checkbox"
+                          checked={color.habilitado}
+                          onChange={() => toggleColorHabilitado(i)}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-xs text-gray-600">Activo</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => removerColor(i)}
+                        className="p-1 rounded hover:bg-red-50 text-red-400 flex-shrink-0"
+                      >
+                        <HiX size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Multi-image section */}
