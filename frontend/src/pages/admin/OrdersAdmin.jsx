@@ -4,7 +4,7 @@ import AdminLayout from '../../components/admin/AdminLayout';
 import { useGetAllOrdersQuery, useUpdateOrderMutation, useFinalizeOrderMutation, useDeleteOrderMutation } from '../../services/ordersApi';
 import { formatCurrency } from '../../utils/formatCurrency';
 import toast from 'react-hot-toast';
-import { HiOutlineCheckCircle, HiOutlineTrash } from 'react-icons/hi';
+import { HiOutlineCheckCircle, HiOutlineTrash, HiOutlineChevronDown, HiOutlineChevronUp } from 'react-icons/hi';
 
 const ENVIO_OPTIONS = ['pendiente', 'preparando', 'enviado', 'entregado', 'cancelado'];
 const PAGO_OPTIONS = ['pendiente', 'aprobado', 'rechazado', 'reembolsado'];
@@ -18,6 +18,7 @@ const METODO_BADGE = {
 const OrdersAdmin = () => {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
+  const [expandedOrderId, setExpandedOrderId] = useState(null);
   const { data, isLoading, isFetching } = useGetAllOrdersQuery({ page, limit: 15 });
   const [updateOrder] = useUpdateOrderMutation();
   const [finalizeOrder, { isLoading: finalizing }] = useFinalizeOrderMutation();
@@ -117,8 +118,17 @@ const OrdersAdmin = () => {
                 <tr key={i}><td colSpan={8} className="px-4 py-4"><div className="h-4 bg-gray-100 rounded animate-pulse" /></td></tr>
               ))
             ) : (data?.orders || []).map((order) => (
-              <tr key={order._id} className="border-b last:border-0 hover:bg-gray-50">
-                <td className="px-4 py-3 font-mono font-bold text-primary-600">{order.codigo}</td>
+              <React.Fragment key={order._id}>
+                <tr className="border-b last:border-0 hover:bg-gray-50">
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => setExpandedOrderId(expandedOrderId === order._id ? null : order._id)}
+                      className="p-1 hover:bg-gray-200 rounded inline-flex mr-2"
+                    >
+                      {expandedOrderId === order._id ? <HiOutlineChevronUp size={16} /> : <HiOutlineChevronDown size={16} />}
+                    </button>
+                    <span className="font-mono font-bold text-primary-600">{order.codigo}</span>
+                  </td>
                 <td className="px-4 py-3 text-gray-600 max-w-[140px] truncate">
                   {order.usuario ? `${order.usuario.nombre} ${order.usuario.apellido}` : order.guestData?.nombre}
                 </td>
@@ -175,10 +185,67 @@ const OrdersAdmin = () => {
                   ) : null}
                 </td>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+              {expandedOrderId === order._id && (
+                <tr className="bg-gray-50 border-b">
+                  <td colSpan={8} className="px-4 py-4">
+                    <div className="bg-white rounded-lg p-4 border border-gray-200">
+                      <h4 className="font-semibold text-sm mb-3">Detalles del pedido</h4>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-xs">
+                          <thead>
+                            <tr className="border-b text-gray-600">
+                              <th className="text-left px-2 py-2">Producto</th>
+                              <th className="text-right px-2 py-2">Cantidad</th>
+                              <th className="text-left px-2 py-2">Talla</th>
+                              <th className="text-left px-2 py-2">Color</th>
+                              <th className="text-right px-2 py-2">Precio unit.</th>
+                              <th className="text-right px-2 py-2">Subtotal</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {order.items?.map((item, i) => (
+                              <tr key={i} className="border-b last:border-0 hover:bg-gray-50">
+                                <td className="px-2 py-2">{item.nombre}</td>
+                                <td className="text-right px-2 py-2">{item.cantidad}</td>
+                                <td className="px-2 py-2">
+                                  <span className="text-xs bg-blue-50 px-2 py-1 rounded font-medium">
+                                    {item.talla || '—'}
+                                  </span>
+                                </td>
+                                <td className="px-2 py-2">
+                                  <div className="flex items-center gap-2">
+                                    {item.color && (
+                                      <>
+                                        <div
+                                          className="w-4 h-4 rounded-full border border-gray-300"
+                                          style={{ backgroundColor: item.color.includes('#') ? item.color : '#000' }}
+                                          title={item.color}
+                                        />
+                                        <span className="text-xs">{item.color}</span>
+                                      </>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="text-right px-2 py-2">{formatCurrency(item.precio)}</td>
+                                <td className="text-right px-2 py-2 font-medium">
+                                  {formatCurrency(item.precio * item.cantidad)}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="mt-3 p-3 bg-gray-50 rounded text-sm">
+                        <div className="flex justify-between">
+                          <span>Total:</span>
+                          <span className="font-bold text-primary-600">{formatCurrency(order.total)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </React.Fragment>
 
       {/* Pagination */}
       {data && data.pages > 1 && (
