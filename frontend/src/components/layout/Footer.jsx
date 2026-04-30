@@ -9,6 +9,20 @@ const Footer = () => {
   const tiktokUrl = import.meta.env.VITE_TIKTOK_URL || 'https://www.tiktok.com';
   const storeName = import.meta.env.VITE_STORE_NAME || 'Mi Tienda';
 
+  // DEBUG: Log env variables
+  console.log('ENV VARIABLES:', {
+    waNumber,
+    instagramUrl,
+    tiktokUrl,
+    storeName,
+    raw: {
+      VITE_WHATSAPP_NUMBER: import.meta.env.VITE_WHATSAPP_NUMBER,
+      VITE_INSTAGRAM_URL: import.meta.env.VITE_INSTAGRAM_URL,
+      VITE_TIKTOK_URL: import.meta.env.VITE_TIKTOK_URL,
+      VITE_STORE_NAME: import.meta.env.VITE_STORE_NAME,
+    }
+  });
+
   return (
     <footer className="bg-[#0D0D0D] text-gray-300 mt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -19,7 +33,7 @@ const Footer = () => {
               <img src="/logo.png" alt="Logo" className="h-40 w-auto" />
             </div>
             <p className="text-xl font-extrabold text-white tracking-widest mb-6 text-center md:text-left uppercase drop-shadow-lg">
-              SIN LIMITES
+              {storeName}
             </p>
             <div className="flex gap-6">
               <a
