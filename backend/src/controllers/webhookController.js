@@ -6,6 +6,8 @@ const { sendOrderConfirmationToUser } = require('../utils/sendNotifications');
 
 const mercadopagoWebhook = async (req, res, next) => {
   try {
+    console.log('🔔 Webhook recibido:', { type: req.body?.type, data: req.body?.data?.id });
+
     // Validate signature if secret is set
     if (process.env.MP_WEBHOOK_SECRET) {
       const signature = req.headers['x-signature'] || '';
@@ -13,6 +15,7 @@ const mercadopagoWebhook = async (req, res, next) => {
       const manifest = `id:${req.query['data.id']};request-id:${xRequestId};ts:${req.query.ts};`;
       const hmac = crypto.createHmac('sha256', process.env.MP_WEBHOOK_SECRET).update(manifest).digest('hex');
       if (hmac !== signature.split('=')[1]) {
+        console.error('❌ Firma inválida en webhook');
         return res.status(401).json({ message: 'Firma inválida.' });
       }
     }
@@ -21,7 +24,12 @@ const mercadopagoWebhook = async (req, res, next) => {
 
     if (type === 'payment') {
       const paymentId = data?.id;
-      if (!paymentId) return res.sendStatus(200);
+      if (!paymentId) {
+        console.log('⚠️  Sin paymentId, ignorando webhook');
+        return res.sendStatus(200);
+      }
+
+      console.log(`📊 Procesando pago ID: ${paymentId}`);
 
       // Fetch payment from MP API
       const MercadoPagoConfig = require('mercadopago').default;
@@ -33,15 +41,23 @@ const mercadopagoWebhook = async (req, res, next) => {
       const externalRef = paymentData.external_reference;
       const status = paymentData.status; // approved, pending, rejected
 
+      console.log(`🔍 Pago ${paymentId}: status=${status}, externalRef=${externalRef}`);
+
       const statusMap = { approved: 'aprobado', pending: 'pendiente', rejected: 'rechazado' };
       const estadoPago = statusMap[status] || 'pendiente';
 
       const order = await Order.findById(externalRef);
-      if (!order) return res.sendStatus(200);
+      if (!order) {
+        console.error(`❌ Orden no encontrada: ${externalRef}`);
+        return res.sendStatus(200);
+      }
+
+      console.log(`📦 Orden encontrada: ${order.codigo}`);
 
       order.estadoPago = estadoPago;
       order.mpPaymentId = paymentId;
       if (estadoPago === 'aprobado') {
+        console.log(`✅ Pago aprobado para orden ${order.codigo}`);
         order.metodoPago = 'mercadopago';
         // When payment approved, ensure envio is 'pendiente' for admin to dispatch
         if (!order.estadoEnvio || order.estadoEnvio === 'pendiente') {
@@ -50,9 +66,11 @@ const mercadopagoWebhook = async (req, res, next) => {
         // Clear the user's cart in DB
         if (order.usuario) {
           await Cart.findOneAndUpdate({ usuario: order.usuario }, { items: [] });
+          console.log(`🛒 Carrito limpiado para usuario ${order.usuario}`);
         }
       }
       await order.save();
+      console.log(`💾 Orden actualizada: ${order.codigo}`);
 
       // Send confirmation email when payment is approved
       if (estadoPago === 'aprobado') {
@@ -67,10 +85,14 @@ const mercadopagoWebhook = async (req, res, next) => {
           emailRecipient = order.guestData?.email;
         }
 
+        console.log(`📧 Enviando email a: ${emailRecipient}`);
+
         if (emailRecipient) {
           sendOrderConfirmationToUser(emailRecipient, order)
             .then(() => console.log(`✅ Email MP enviado a ${emailRecipient}`))
             .catch(err => console.error(`❌ Error enviando email MP a ${emailRecipient}:`, err.message));
+        } else {
+          console.error(`❌ Sin emailRecipient para orden ${order.codigo}`);
         }
       }
 
@@ -80,7 +102,7 @@ const mercadopagoWebhook = async (req, res, next) => {
 
     res.sendStatus(200);
   } catch (error) {
-    console.error('Webhook error:', error.message);
+    console.error('❌ Webhook error:', error.message, error.stack);
     res.sendStatus(200); // Always return 200 to MP
   }
 };
