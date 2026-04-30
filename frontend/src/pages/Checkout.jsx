@@ -40,6 +40,8 @@ const Checkout = () => {
   const orderItems = items.map((i) => ({
     producto: i.producto?._id || i.producto,
     cantidad: i.cantidad,
+    talla: i.talla || null,
+    color: i.color || null,
   }));
 
   const finalTotal = couponResult ? Math.max(0, total - couponResult.descuento) : total;

@@ -19,7 +19,7 @@ import toast from 'react-hot-toast';
 import { HiOutlinePlus, HiOutlineTrash, HiOutlinePencil, HiX, HiOutlinePhotograph, HiOutlineSearch, HiOutlineRefresh, HiOutlineFilm } from 'react-icons/hi';
 
 const MAX_IMAGES = 7;
-const TALLAS_DISPONIBLES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+const TALLAS_DISPONIBLES = ['1', '2', '3', '4', '5', '6', '7', '8'];
 
 // Normalizar a strings para consistency (HTML input values son siempre strings)
 const EMPTY = { 
