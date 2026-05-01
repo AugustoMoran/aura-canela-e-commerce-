@@ -49,7 +49,7 @@ const HeroCarousel = () => {
         autoplay={{ delay: 5000, disableOnInteraction: false }}
         navigation
         pagination={{ clickable: true }}
-        loop
+        loop={slides.length > 1}
         className="w-full h-[400px] sm:h-[500px] lg:h-[600px]"
       >
         {slides.map((slide) => (

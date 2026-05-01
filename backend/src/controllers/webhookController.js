@@ -34,9 +34,22 @@ const mercadopagoWebhook = async (req, res, next) => {
       // Fetch payment from MP API
       const MercadoPagoConfig = require('mercadopago').default;
       const { Payment } = require('mercadopago');
+      
+      if (!process.env.MP_ACCESS_TOKEN) {
+        console.error('❌ MP_ACCESS_TOKEN no configurado');
+        return res.sendStatus(500);
+      }
+      
       const client = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN });
       const payment = new Payment(client);
-      const paymentData = await payment.get({ id: paymentId });
+      
+      let paymentData;
+      try {
+        paymentData = await payment.get({ id: paymentId });
+      } catch (error) {
+        console.error('❌ Error obteniendo datos de pago desde MP:', error.message);
+        return res.sendStatus(500);
+      }
 
       const externalRef = paymentData.external_reference;
       const status = paymentData.status; // approved, pending, rejected

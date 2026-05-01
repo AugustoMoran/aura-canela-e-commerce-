@@ -26,6 +26,9 @@ const chatRoutes = require('./src/routes/chat');
 
 const app = express();
 
+// Trust proxy for Fly.io / reverse proxies (needed for rate limiter and IP detection)
+app.set('trust proxy', 1);
+
 // Security headers
 app.use(helmet());
 
