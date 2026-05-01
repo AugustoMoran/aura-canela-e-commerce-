@@ -2,17 +2,28 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 /**
- * Middleware: verify access token from cookie (HTTP-only).
+ * Middleware: verify access token from cookie (HTTP-only) or Authorization header.
  * Attaches req.user on success.
  */
 const protect = async (req, res, next) => {
   try {
-    const token = req.cookies.accessToken;
+    let token = req.cookies.accessToken;
+    
+    // Fallback: intenta obtener del header Authorization (para móvil cuando cookies fallan)
+    if (!token) {
+      const authHeader = req.headers.authorization;
+      if (authHeader?.startsWith('Bearer ')) {
+        token = authHeader.slice(7);
+        console.log('🔑 Token obtenido del header Authorization');
+      }
+    } else {
+      console.log('🔑 Token obtenido de cookie HTTP-only');
+    }
+    
     if (!token) {
       return res.status(401).json({ message: 'No autorizado. Token requerido.' });
     }
 
-    console.log('🔑 Verificando token de cookie');
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const user = await User.findById(decoded.id).select('-password');
@@ -41,21 +52,29 @@ const adminOnly = (req, res, next) => {
 };
 
 /**
- * Middleware: optionally attach user if token present in cookie (non-blocking).
+ * Middleware: optionally attach user if token present in cookie or Authorization header (non-blocking).
  */
 const optionalAuth = async (req, res, next) => {
   try {
-    const token = req.cookies.accessToken;
-    console.log('🔑 optionalAuth:', token ? '✅ Token en cookie' : '⚠️  Sin token');
+    let token = req.cookies.accessToken;
+    
+    // Fallback: intenta obtener del header Authorization
+    if (!token) {
+      const authHeader = req.headers.authorization;
+      if (authHeader?.startsWith('Bearer ')) {
+        token = authHeader.slice(7);
+        console.log('🔑 optionalAuth: ✅ Token en Authorization header');
+      }
+    } else {
+      console.log('🔑 optionalAuth: ✅ Token en cookie');
+    }
     
     if (!token) {
-      console.log('⚠️  Sin token en cookie, continuando como guest');
+      console.log('⚠️  optionalAuth: Sin token, continuando como guest');
       return next();
     }
 
-    console.log('🔐 Token encontrado en cookie');
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log('✅ Token decodificado, userId:', decoded.id);
     
     const user = await User.findById(decoded.id).select('-password');
     console.log('👤 Usuario encontrado:', user ? user.email : 'NO ENCONTRADO');
