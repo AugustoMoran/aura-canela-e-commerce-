@@ -3,15 +3,15 @@ const { getUsageReport } = require('../services/cloudinaryService');
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-// Middleware to ensure cloudinary is initialized with latest env vars
-const ensureCloudinaryInit = (req, res, next) => {
+// Ensure cloudinary is initialized BEFORE creating storage
+const getUpload = () => {
+  // Reinitialize cloudinary with current env vars
+  console.log('🔵 Initializing Cloudinary for upload...');
+  console.log(`   Cloud Name: ${process.env.CLOUDINARY_CLOUD_NAME}`);
+  console.log(`   API Key: ${process.env.CLOUDINARY_API_KEY}`);
   initCloudinary();
-  next();
-};
-
-// Create storage configuration
-const getStorageConfig = () => {
-  return new CloudinaryStorage({
+  
+  const storage = new CloudinaryStorage({
     cloudinary,
     params: async (req, file) => {
       const isVideo = file.mimetype.startsWith('video/');
@@ -35,30 +35,30 @@ const getStorageConfig = () => {
       }
     },
   });
+
+  return multer({
+    storage,
+    limits: { fileSize: 100 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+      const allowedImages = ['image/jpeg', 'image/png', 'image/webp'];
+      const allowedVideos = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo'];
+      const allowed = [...allowedImages, ...allowedVideos];
+      
+      if (!allowed.includes(file.mimetype)) {
+        return cb(new Error('Formato no permitido. Solo JPEG, PNG, WEBP, MP4, WEBM, MOV, AVI.'));
+      }
+      cb(null, true);
+    },
+  });
 };
-
-const storage = getStorageConfig();
-
-const upload = multer({
-  storage,
-  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB para videos
-  fileFilter: (req, file, cb) => {
-    const allowedImages = ['image/jpeg', 'image/png', 'image/webp'];
-    const allowedVideos = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo'];
-    const allowed = [...allowedImages, ...allowedVideos];
-    
-    if (!allowed.includes(file.mimetype)) {
-      return cb(new Error('Formato no permitido. Solo JPEG, PNG, WEBP, MP4, WEBM, MOV, AVI.'));
-    }
-    cb(null, true);
-  },
-});
 
 const uploadImage = async (req, res, next) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'No se recibió archivo.' });
+    console.log('✅ Upload successful:', req.file.path);
     res.json({ url: req.file.path, publicId: req.file.filename });
   } catch (error) {
+    console.log('🔴 Upload error:', error.message);
     next(error);
   }
 };
@@ -71,10 +71,8 @@ const deleteImage = async (req, res, next) => {
     // Re-ensure cloudinary is initialized
     initCloudinary();
     
-    // Detectar si es video por el parámetro o intentar ambos
     const resourceType = isVideo ? 'video' : 'image';
     await cloudinary.uploader.destroy(publicId, { resource_type: resourceType }).catch(() => {
-      // Si falla como imagen, intentar como video
       if (resourceType === 'image') {
         return cloudinary.uploader.destroy(publicId, { resource_type: 'video' });
       }
@@ -96,4 +94,4 @@ const getStorageUsage = async (req, res, next) => {
   }
 };
 
-module.exports = { upload, uploadImage, deleteImage, getStorageUsage, ensureCloudinaryInit };
+module.exports = { getUpload, uploadImage, deleteImage, getStorageUsage };
