@@ -18,6 +18,7 @@ const register = async (req, res, next) => {
 
     res.status(201).json({
       accessToken,
+      refreshToken, // 📱 Para fallback en móvil
       user: {
         _id: user._id,
         nombre: user.nombre,
@@ -48,6 +49,7 @@ const login = async (req, res, next) => {
 
     res.json({
       accessToken,
+      refreshToken, // 📱 Para fallback en móvil
       user: {
         _id: user._id,
         nombre: user.nombre,
@@ -63,7 +65,18 @@ const login = async (req, res, next) => {
 
 const refresh = async (req, res, next) => {
   try {
-    const oldToken = req.cookies.refreshToken;
+    let oldToken = req.cookies.refreshToken;
+    
+    // Fallback: si no está en cookie, intenta obtener del header X-Refresh-Token (móvil)
+    if (!oldToken) {
+      oldToken = req.headers['x-refresh-token'];
+      if (oldToken) {
+        console.log('🔄 Refresh token obtenido del header X-Refresh-Token');
+      }
+    } else {
+      console.log('🔄 Refresh token obtenido de cookie HTTP-only');
+    }
+    
     if (!oldToken) {
       return res.status(401).json({ message: 'Refresh token no encontrado.' });
     }
@@ -72,7 +85,10 @@ const refresh = async (req, res, next) => {
     setAccessTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, refreshToken);
 
-    res.json({ accessToken });
+    res.json({ 
+      accessToken,
+      refreshToken, // 📱 Devolver también en JSON para móvil
+    });
   } catch (error) {
     next(error);
   }
