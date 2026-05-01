@@ -31,6 +31,8 @@ const getUpload = () => {
   return upload;
 };
 
+const crypto = require('crypto');
+
 // Function to upload buffer to Cloudinary using API
 const uploadToCloudinary = async (fileBuffer, filename, mimetype) => {
   console.log(`\n📤 Uploading ${filename} to Cloudinary via HTTP API...`);
@@ -54,11 +56,27 @@ const uploadToCloudinary = async (fileBuffer, filename, mimetype) => {
   formData.append('file', blob, filename);
   formData.append('folder', 'ecommerce');
   formData.append('public_id', filename.split('.')[0]);
-  formData.append('api_key', apiKey);
   
-  // Add timestamp for authentication
+  // Add authentication - timestamp for signing
   const timestamp = Math.floor(Date.now() / 1000);
+  formData.append('api_key', apiKey);
   formData.append('timestamp', timestamp.toString());
+  
+  // Generate signature for authenticated upload
+  // Signature = SHA1(all_params_sorted + api_secret)
+  const params = {
+    timestamp: timestamp.toString(),
+    api_key: apiKey,
+  };
+  
+  // Create string to sign (key=value pairs in alphabetical order)
+  const paramsArray = Object.entries(params)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, value]) => `${key}=${value}`);
+  
+  const stringToSign = paramsArray.join('&') + apiSecret;
+  const signature = crypto.createHash('sha1').update(stringToSign).digest('hex');
+  formData.append('signature', signature);
   
   try {
     const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`;
@@ -66,7 +84,8 @@ const uploadToCloudinary = async (fileBuffer, filename, mimetype) => {
     console.log(`   Cloud Name: ${cloudName}`);
     console.log(`   Resource Type: ${resourceType}`);
     console.log(`   File: ${filename} (${fileBuffer.length} bytes)`);
-    console.log(`   API Key: ${apiKey}`);
+    console.log(`   Timestamp: ${timestamp}`);
+    console.log(`   Signature: ${signature.substring(0, 20)}...`);
     
     const response = await fetch(uploadUrl, {
       method: 'POST',
