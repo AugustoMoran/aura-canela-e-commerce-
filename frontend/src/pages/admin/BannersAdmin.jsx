@@ -300,6 +300,19 @@ const BannersAdmin = () => {
               />
             </div>
 
+            <div className="flex items-center gap-2 md:col-span-2">
+              <input
+                type="checkbox"
+                id="mostrarBoton"
+                checked={form.mostrarBoton}
+                onChange={(e) => setForm({ ...form, mostrarBoton: e.target.checked })}
+                className="w-4 h-4"
+              />
+              <label htmlFor="mostrarBoton" className="text-sm font-medium cursor-pointer">
+                Mostrar botón CTA
+              </label>
+            </div>
+
             <div>
               <label className="block text-sm font-medium mb-1">Color de fondo</label>
               <select

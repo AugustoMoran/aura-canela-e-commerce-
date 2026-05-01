@@ -52,7 +52,13 @@ const DEFAULT_SLIDES = [
 
 const HeroCarousel = () => {
   const { data: apiBanners } = useGetBannersQuery(true);
-  const slides = apiBanners && apiBanners.length > 0 ? apiBanners : DEFAULT_SLIDES;
+  const slides = apiBanners && apiBanners.length > 0 ? apiBanners.map(b => ({
+    ...b,
+    mostrarTexto: b.mostrarTexto !== false,
+    mostrarBoton: b.mostrarBoton !== false,
+    autoplay: b.autoplay === true,
+    video: b.video || '',
+  })) : DEFAULT_SLIDES;
   return (
     <div className="w-full">
       <Swiper
@@ -104,7 +110,7 @@ const HeroCarousel = () => {
                         )}
                       </>
                     )}
-                    {slide.mostrarBoton === true && slide.ctaTexto && slide.ctaTexto.trim() && (
+                    {slide.mostrarBoton && slide.ctaTexto && slide.ctaTexto.trim() && (
                       <Link
                         to={slide.ctaLink || '/'}
                         className="inline-flex items-center gap-2 bg-primary-400 text-gray-900 font-bold px-8 py-3 rounded-full shadow-lg hover:bg-primary-300 transition-all hover:scale-105 active:scale-95"
