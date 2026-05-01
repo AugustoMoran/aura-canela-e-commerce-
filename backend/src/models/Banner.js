@@ -4,8 +4,8 @@ const bannerSchema = new mongoose.Schema(
   {
     titulo: { type: String, required: true, trim: true },
     subtitulo: { type: String, trim: true },
-    imagen: { type: String, required: true },
-    imagenPublicId: { type: String },
+    imagen: { type: String, default: '' },
+    imagenPublicId: { type: String, default: '' },
     video: { type: String, default: '' },
     videoPublicId: { type: String, default: '' },
     ctaTexto: { type: String, default: 'Ver productos' },
@@ -16,5 +16,14 @@ const bannerSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Validación: al menos imagen o video debe estar presente
+bannerSchema.pre('save', function(next) {
+  if (!this.imagen && !this.video) {
+    next(new Error('Banner debe tener al menos una imagen o un video'));
+  } else {
+    next();
+  }
+});
 
 module.exports = mongoose.model('Banner', bannerSchema);
