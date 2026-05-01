@@ -5,7 +5,20 @@ const getBanners = async (req, res, next) => {
     const soloActivos = req.query.activos === 'true';
     const filter = soloActivos ? { activo: true } : {};
     const banners = await Banner.find(filter).sort({ orden: 1, createdAt: 1 });
-    res.json(banners);
+    
+    // Agregar defaults para campos que podrían no existir en banners antiguos
+    const bannersConDefaults = banners.map(b => {
+      const obj = b.toObject();
+      return {
+        ...obj,
+        mostrarTexto: obj.mostrarTexto !== false,
+        mostrarBoton: obj.mostrarBoton !== false,
+        autoplay: obj.autoplay === true,
+        video: obj.video || '',
+      };
+    });
+    
+    res.json(bannersConDefaults);
   } catch (err) {
     next(err);
   }
