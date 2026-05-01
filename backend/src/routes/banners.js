@@ -7,18 +7,38 @@ const { protect, adminOnly } = require('../middleware/auth');
 router.get('/test/debug', async (req, res, next) => {
   try {
     const Banner = require('../models/Banner');
+    const Order = require('../models/Order');
+    
     const banners = await Banner.find({ activo: true }).lean();
+    const lastOrder = await Order.findOne().sort({ createdAt: -1 }).lean();
+    
     res.json({
-      count: banners.length,
-      banners: banners.map(b => ({
-        _id: b._id,
-        titulo: b.titulo,
-        video: b.video,
-        imagen: b.imagen,
-        mostrarTexto: b.mostrarTexto,
-        mostrarBoton: b.mostrarBoton,
-        autoplay: b.autoplay,
-      }))
+      banners: {
+        count: banners.length,
+        data: banners.map(b => ({
+          _id: b._id,
+          titulo: b.titulo,
+          video: b.video,
+          imagen: b.imagen,
+          mostrarTexto: b.mostrarTexto,
+          mostrarBoton: b.mostrarBoton,
+          autoplay: b.autoplay,
+        }))
+      },
+      lastOrder: lastOrder ? {
+        _id: lastOrder._id,
+        codigo: lastOrder.codigo,
+        mpPreferenceId: lastOrder.mpPreferenceId,
+        mpPaymentId: lastOrder.mpPaymentId,
+        estadoPago: lastOrder.estadoPago,
+        metodoPago: lastOrder.metodoPago,
+      } : null,
+      mpEnv: {
+        hasAccessToken: !!process.env.MP_ACCESS_TOKEN,
+        hasPublicKey: !!process.env.MP_PUBLIC_KEY,
+        tokenLength: process.env.MP_ACCESS_TOKEN?.length || 0,
+        publicKeyLength: process.env.MP_PUBLIC_KEY?.length || 0,
+      }
     });
   } catch (err) {
     next(err);
