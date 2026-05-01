@@ -1,32 +1,43 @@
-const { cloudinary } = require('../config/cloudinary');
+const { cloudinary, initCloudinary } = require('../config/cloudinary');
 const { getUsageReport } = require('../services/cloudinaryService');
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-const storage = new CloudinaryStorage({
-  cloudinary,
-  params: async (req, file) => {
-    const isVideo = file.mimetype.startsWith('video/');
-    
-    const baseParams = {
-      folder: 'ecommerce',
-      resource_type: isVideo ? 'video' : 'image',
-    };
+// Middleware to ensure cloudinary is initialized with latest env vars
+const ensureCloudinaryInit = (req, res, next) => {
+  initCloudinary();
+  next();
+};
 
-    if (isVideo) {
-      return {
-        ...baseParams,
-        allowed_formats: ['mp4', 'webm', 'mov', 'avi'],
+// Create storage configuration
+const getStorageConfig = () => {
+  return new CloudinaryStorage({
+    cloudinary,
+    params: async (req, file) => {
+      const isVideo = file.mimetype.startsWith('video/');
+      
+      const baseParams = {
+        folder: 'ecommerce',
+        resource_type: isVideo ? 'video' : 'image',
       };
-    } else {
-      return {
-        ...baseParams,
-        allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
-        transformation: [{ width: 1200, height: 1200, crop: 'limit', quality: 'auto' }],
-      };
-    }
-  },
-});
+
+      if (isVideo) {
+        return {
+          ...baseParams,
+          allowed_formats: ['mp4', 'webm', 'mov', 'avi'],
+        };
+      } else {
+        return {
+          ...baseParams,
+          allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+          transformation: [{ width: 1200, height: 1200, crop: 'limit', quality: 'auto' }],
+        };
+      }
+    },
+  });
+};
+
+const storage = getStorageConfig();
 
 const upload = multer({
   storage,
@@ -57,6 +68,9 @@ const deleteImage = async (req, res, next) => {
     const { publicId, isVideo } = req.body;
     if (!publicId) return res.status(400).json({ message: 'publicId requerido.' });
     
+    // Re-ensure cloudinary is initialized
+    initCloudinary();
+    
     // Detectar si es video por el parámetro o intentar ambos
     const resourceType = isVideo ? 'video' : 'image';
     await cloudinary.uploader.destroy(publicId, { resource_type: resourceType }).catch(() => {
@@ -82,4 +96,4 @@ const getStorageUsage = async (req, res, next) => {
   }
 };
 
-module.exports = { upload, uploadImage, deleteImage, getStorageUsage };
+module.exports = { upload, uploadImage, deleteImage, getStorageUsage, ensureCloudinaryInit };
