@@ -49,7 +49,7 @@ const BannersAdmin = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.imagen) return toast.error('La imagen es obligatoria');
+    if (!form.imagen && !form.video) return toast.error('Banner debe tener al menos una imagen o un video');
     try {
       if (editing) {
         await updateBanner({ id: editing, ...form }).unwrap();
@@ -187,7 +187,7 @@ const BannersAdmin = () => {
 
             {/* Imagen */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium mb-1">Imagen *</label>
+              <label className="block text-sm font-medium mb-1">Imagen</label>
               <div className="flex items-center gap-3">
                 <label className="btn-secondary flex items-center gap-2 cursor-pointer">
                   <HiOutlinePhotograph size={16} />
@@ -318,11 +318,22 @@ const BannersAdmin = () => {
         <div className="space-y-3">
           {banners.map((b) => (
             <div key={b._id} className="card p-4 flex items-center gap-4">
-              <img
-                src={b.imagen}
-                alt={b.titulo}
-                className="w-28 h-16 object-cover rounded flex-shrink-0"
-              />
+              {b.imagen ? (
+                <img
+                  src={b.imagen}
+                  alt={b.titulo}
+                  className="w-28 h-16 object-cover rounded flex-shrink-0"
+                />
+              ) : b.video ? (
+                <video
+                  src={b.video}
+                  className="w-28 h-16 object-cover rounded flex-shrink-0 bg-gray-800"
+                />
+              ) : (
+                <div className="w-28 h-16 bg-gray-300 rounded flex-shrink-0 flex items-center justify-center">
+                  <HiOutlinePhotograph size={24} className="text-gray-500" />
+                </div>
+              )}
               <div className="flex-1 min-w-0">
                 <p className="font-semibold truncate">{b.titulo}</p>
                 <p className="text-sm text-gray-500 truncate">{b.subtitulo}</p>
