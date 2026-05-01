@@ -5,7 +5,7 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 // Ensure cloudinary is initialized BEFORE creating storage
 const getUpload = () => {
-  console.log('🔵 Creating upload middleware...');
+  console.log('\n🔵 Creating upload middleware...');
   
   // Reinitialize cloudinary with current env vars
   console.log('🔵 Initializing Cloudinary for upload...');
@@ -16,6 +16,7 @@ const getUpload = () => {
   console.log(`   After init - api_key: ${cloudinary.config().api_key}`);
   
   try {
+    console.log('\n📝 Attempting to create CloudinaryStorage...');
     const storage = new CloudinaryStorage({
       cloudinary,
       params: async (req, file) => {
@@ -62,22 +63,30 @@ const getUpload = () => {
       },
     });
 
-    console.log('✅ Multer instance created successfully');
+    console.log('✅ Multer instance created successfully\n');
     return upload;
   } catch (err) {
-    console.log('🔴 Error creating upload middleware:', err.message);
-    console.log('   Stack:', err.stack);
+    console.log('\n🔴 Error creating upload middleware:');
+    console.log(`   Message: ${err.message}`);
+    console.log(`   Type: ${err.name}`);
+    console.log(`   Status: ${err.status}`);
+    console.log(`   Http Code: ${err.http_code}`);
+    console.log(`   Stack: ${err.stack}`);
     throw err;
   }
 };
 
 const uploadImage = async (req, res, next) => {
   try {
-    if (!req.file) return res.status(400).json({ message: 'No se recibió archivo.' });
+    if (!req.file) {
+      console.log('❌ No file received in upload request');
+      return res.status(400).json({ message: 'No se recibió archivo.' });
+    }
     console.log('✅ Upload successful:', req.file.path);
     res.json({ url: req.file.path, publicId: req.file.filename });
   } catch (error) {
     console.log('🔴 Upload error:', error.message);
+    console.log('   Stack:', error.stack);
     next(error);
   }
 };
@@ -85,21 +94,29 @@ const uploadImage = async (req, res, next) => {
 const deleteImage = async (req, res, next) => {
   try {
     const { publicId, isVideo } = req.body;
-    if (!publicId) return res.status(400).json({ message: 'publicId requerido.' });
+    if (!publicId) {
+      console.log('❌ No publicId provided for deletion');
+      return res.status(400).json({ message: 'publicId requerido.' });
+    }
     
     // Re-ensure cloudinary is initialized
     initCloudinary();
     
     const resourceType = isVideo ? 'video' : 'image';
+    console.log(`🗑️  Attempting to delete ${resourceType}: ${publicId}`);
+    
     await cloudinary.uploader.destroy(publicId, { resource_type: resourceType }).catch(() => {
       if (resourceType === 'image') {
+        console.log('   Retrying as video...');
         return cloudinary.uploader.destroy(publicId, { resource_type: 'video' });
       }
       throw new Error('No se pudo eliminar el archivo.');
     });
     
+    console.log('✅ File deleted successfully');
     res.json({ message: 'Archivo eliminado.' });
   } catch (error) {
+    console.log('🔴 Delete error:', error.message);
     next(error);
   }
 };
@@ -109,6 +126,7 @@ const getStorageUsage = async (req, res, next) => {
     const report = await getUsageReport();
     res.json(report);
   } catch (error) {
+    console.log('🔴 Storage usage error:', error.message);
     next(error);
   }
 };

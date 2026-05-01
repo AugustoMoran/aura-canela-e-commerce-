@@ -9,25 +9,33 @@ const initCloudinary = () => {
   console.log('📋 Environment variables:');
   console.log(`   CLOUDINARY_CLOUD_NAME: ${process.env.CLOUDINARY_CLOUD_NAME || 'UNDEFINED'}`);
   console.log(`   CLOUDINARY_API_KEY: ${process.env.CLOUDINARY_API_KEY || 'UNDEFINED'}`);
-  console.log(`   CLOUDINARY_API_SECRET: ${process.env.CLOUDINARY_API_SECRET ? process.env.CLOUDINARY_API_SECRET.substring(0, 15) + '...' : 'UNDEFINED'}`);
+  console.log(`   CLOUDINARY_API_SECRET: ${process.env.CLOUDINARY_API_SECRET ? process.env.CLOUDINARY_API_SECRET.substring(0, 20) + '... (length: ' + process.env.CLOUDINARY_API_SECRET.length + ')' : 'UNDEFINED'}`);
   
   try {
-    cloudinary.config({
+    const configObj = {
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
       api_key: process.env.CLOUDINARY_API_KEY,
       api_secret: process.env.CLOUDINARY_API_SECRET,
       secure: true,
-    });
+    };
+    
+    console.log('\n📝 Calling cloudinary.config() with:');
+    console.log(`   cloud_name: ${configObj.cloud_name}`);
+    console.log(`   api_key: ${configObj.api_key}`);
+    console.log(`   api_secret length: ${configObj.api_secret ? configObj.api_secret.length : 0}`);
+    
+    cloudinary.config(configObj);
     
     // Verify the config was set
     const config = cloudinary.config();
-    console.log('\n✅ Configuration applied. Verifying state:');
+    console.log('\n✅ cloudinary.config() executed. Verifying state:');
     console.log(`   Config cloud_name: ${config.cloud_name || 'NOT SET'}`);
     console.log(`   Config api_key: ${config.api_key || 'NOT SET'}`);
-    console.log(`   Config api_secret: ${config.api_secret ? config.api_secret.substring(0, 10) + '...' : 'NOT SET'}`);
+    console.log(`   Config api_secret: ${config.api_secret ? 'SET (length: ' + config.api_secret.length + ')' : 'NOT SET'}`);
     console.log('✅ Cloudinary initialized successfully\n');
   } catch (err) {
     console.log('\n🔴 Error configuring Cloudinary:', err.message);
+    console.log('Error type:', err.name);
     console.log('Stack:', err.stack);
   }
   
