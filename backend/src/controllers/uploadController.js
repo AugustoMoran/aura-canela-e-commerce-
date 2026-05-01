@@ -51,7 +51,6 @@ const uploadToCloudinary = async (fileBuffer, filename, mimetype) => {
           folder: 'ecommerce',
           public_id: filename.split('.')[0],
           overwrite: true,
-          format: isVideo ? undefined : 'auto',
         },
         (error, result) => {
           if (error) {
