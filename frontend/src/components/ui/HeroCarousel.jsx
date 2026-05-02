@@ -94,7 +94,7 @@ const HeroCarousel = () => {
               {slide.esVideoValido ? (
                 <video
                   src={slide.video}
-                  className="absolute inset-0 w-full h-full object-contain"
+                  className="absolute inset-0 w-full h-full object-cover"
                   autoPlay
                   loop
                   muted
@@ -104,7 +104,7 @@ const HeroCarousel = () => {
                 <img
                   src={slide.imagen}
                   alt={slide.titulo || 'Banner'}
-                  className="absolute inset-0 w-full h-full object-contain"
+                  className="absolute inset-0 w-full h-full object-cover"
                   loading="lazy"
                 />
               ) : null}

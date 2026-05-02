@@ -145,4 +145,27 @@ const updateProductStock = async (req, res, next) => {
   }
 };
 
-module.exports = { createOrder, getMyOrders, getOrderByCode, getAllOrders, updateOrder, dispatchOrder, finalizeOrder, deleteOrder, updateProductStock };
+// Check Mercado Pago payment status on return
+const checkMercadoPagoStatus = async (req, res, next) => {
+  try {
+    const { orderId, status } = req.query;
+
+    console.log(`\n📋 MP Callback recibido: orderId=${orderId}, status=${status}`);
+
+    if (!orderId) {
+      console.error('❌ Sin orderId');
+      return res.redirect(`${process.env.FRONTEND_URL}/orden/confirmacion?status=error&message=orderId-requerido`);
+    }
+
+    // Simply redirect - let webhook handle the payment verification and order update
+    // This callback is just for user feedback
+    console.log(`🔄 Redirigiendo usuario a confirmación...\n`);
+    res.redirect(`${process.env.FRONTEND_URL}/orden/confirmacion?status=${status}&order=${orderId}`);
+
+  } catch (error) {
+    console.error('❌ ERROR en checkMercadoPagoStatus:', error.message);
+    res.redirect(`${process.env.FRONTEND_URL}/orden/confirmacion?status=error`);
+  }
+};
+
+module.exports = { createOrder, getMyOrders, getOrderByCode, getAllOrders, updateOrder, dispatchOrder, finalizeOrder, deleteOrder, updateProductStock, checkMercadoPagoStatus };

@@ -12,6 +12,13 @@ const sendOrderConfirmationToUser = async (email, order) => {
     ? `${order.usuario.nombre} ${order.usuario.apellido}`
     : `${order.guestData.nombre} ${order.guestData.apellido}`;
   
+  const estadoPagoLabel = {
+    'aprobado': '✅ Pagado',
+    'pendiente': '⏳ Pago pendiente',
+    'rechazado': '❌ Pago rechazado',
+    'reembolsado': '💰 Reembolsado'
+  }[order.estadoPago] || order.estadoPago;
+  
   await transporter.sendMail({
     from: `"Tienda Online" <${process.env.EMAIL_FROM}>`,
     to: email,
@@ -23,7 +30,7 @@ const sendOrderConfirmationToUser = async (email, order) => {
         <h3>Detalle de tu pedido:</h3>
         <pre style="background:#f1f5f9;padding:12px;border-radius:8px">${itemsText}</pre>
         <p><strong>Total: $${order.total.toFixed(2)}</strong></p>
-        <p>Estado de pago: <strong>${order.estadoPago}</strong></p>
+        <p>Estado de pago: <strong>${estadoPagoLabel}</strong></p>
         <p>Método de pago: <strong>${order.metodoPago}</strong></p>
         <p style="color:#64748b;font-size:12px;margin-top:20px">Guardá este código para rastrear tu pedido.</p>
       </div>

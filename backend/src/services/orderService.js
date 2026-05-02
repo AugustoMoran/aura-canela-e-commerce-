@@ -157,6 +157,28 @@ const getOrderById = async (id) => {
 const getOrderByCode = async (codigo) => {
   const order = await Order.findOne({ codigo: codigo.toUpperCase() }).populate('usuario', 'nombre apellido email');
   if (!order) throw Object.assign(new Error('Orden no encontrada.'), { statusCode: 404 });
+
+  // If order is pending with MP payment, check current status in MP
+  if (order.estadoPago === 'pendiente' && order.metodoPago === 'mercadopago' && order.mpPaymentId) {
+    try {
+      const MercadoPagoConfig = require('mercadopago').default;
+      const { Payment } = require('mercadopago');
+      
+      const client = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN });
+      const payment = new Payment(client);
+      
+      const paymentData = await payment.get({ id: order.mpPaymentId });
+      
+      if (paymentData.status === 'approved' && order.estadoPago !== 'aprobado') {
+        console.log(`✅ Actualizando orden ${order.codigo} a aprobado (verificado desde MP)`);
+        order.estadoPago = 'aprobado';
+        await order.save();
+      }
+    } catch (error) {
+      console.warn(`⚠️  No se pudo verificar estado en MP: ${error.message}`);
+    }
+  }
+
   return order;
 };
 

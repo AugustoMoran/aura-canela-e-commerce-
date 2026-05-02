@@ -17,6 +17,9 @@ const GRADIENTS = [
   { label: 'Rojo', value: 'from-red-900/70 to-transparent' },
   { label: 'Naranja', value: 'from-orange-900/70 to-transparent' },
   { label: 'Negro', value: 'from-gray-900/80 to-transparent' },
+  { label: 'Blanco', value: 'from-white/50 to-transparent' },
+  { label: 'Gris claro', value: 'from-gray-200/50 to-transparent' },
+  { label: 'Transparente', value: 'transparent' },
 ];
 
 const EMPTY = {
@@ -224,7 +227,7 @@ const BannersAdmin = () => {
                   <img src={form.imagen} alt="preview" className="h-14 w-24 object-cover rounded" />
                 )}
               </div>
-              <p className="text-xs text-gray-500 mt-1">O pegá una URL directamente:</p>
+              <p className="text-xs text-gray-500 mt-2">O pegá una URL directamente:</p>
               <input
                 type="url"
                 value={form.imagen}
@@ -232,6 +235,7 @@ const BannersAdmin = () => {
                 placeholder="https://..."
                 className="input-field mt-1"
               />
+              <p className="text-xs text-blue-600 bg-blue-50 p-2 rounded mt-2">💡 Recomendado: <strong>1600×900px</strong> o <strong>1920×1080px</strong> (16:9). Se adaptará automáticamente a toda la pantalla.</p>
             </div>
 
             {/* Video (opcional) */}
