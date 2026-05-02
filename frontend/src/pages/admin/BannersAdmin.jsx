@@ -16,6 +16,8 @@ const GRADIENTS = [
   { label: 'Verde', value: 'from-emerald-900/70 to-transparent' },
   { label: 'Rojo', value: 'from-red-900/70 to-transparent' },
   { label: 'Naranja', value: 'from-orange-900/70 to-transparent' },
+  { label: 'Amarillo', value: 'from-yellow-600/60 to-transparent' },
+  { label: 'Amarillo claro', value: 'from-yellow-400/50 to-transparent' },
   { label: 'Negro', value: 'from-gray-900/80 to-transparent' },
   { label: 'Blanco', value: 'from-white/50 to-transparent' },
   { label: 'Gris claro', value: 'from-gray-200/50 to-transparent' },
