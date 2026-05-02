@@ -108,13 +108,13 @@ const ProductDetail = () => {
                 loop
                 muted
                 playsInline
-                className="w-full h-full object-contain"
+                className="w-full h-full object-cover"
               />
             ) : (
               <img
                 src={media[selectedImage]?.url}
                 alt={product.nombre}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-cover"
               />
             )}
 
