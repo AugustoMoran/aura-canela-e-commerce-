@@ -56,9 +56,10 @@ const HeroCarousel = () => {
   const handleImageLoad = (e, slideId) => {
     const img = e.target;
     const aspectRatio = img.naturalWidth / img.naturalHeight;
-    // 16:9 = 1.777... Consideramos 16:9 si está entre 1.7 y 1.85
-    const is16x9 = aspectRatio >= 1.7 && aspectRatio <= 1.85;
-    setImageAspectRatios(prev => ({ ...prev, [slideId]: is16x9 }));
+    // 16:9 = 1.777... Consideramos que es DIFERENTE a 16:9 si está fuera de 1.5 a 2.0
+    // Por defecto creemos que es 16:9 (object-cover)
+    const isNotWidescreen = aspectRatio < 1.5 || aspectRatio > 2.0;
+    setImageAspectRatios(prev => ({ ...prev, [slideId]: isNotWidescreen }));
   };
 
   const { data: apiBanners } = useGetBannersQuery(true);
@@ -108,11 +109,11 @@ const HeroCarousel = () => {
                   onLoadedMetadata={(e) => {
                     const video = e.target;
                     const aspectRatio = video.videoWidth / video.videoHeight;
-                    const is16x9 = aspectRatio >= 1.7 && aspectRatio <= 1.85;
-                    setImageAspectRatios(prev => ({ ...prev, [slide._id]: is16x9 }));
+                    const isNotWidescreen = aspectRatio < 1.5 || aspectRatio > 2.0;
+                    setImageAspectRatios(prev => ({ ...prev, [slide._id]: isNotWidescreen }));
                   }}
                   className={`absolute inset-0 w-full h-full ${
-                    imageAspectRatios[slide._id] ? 'object-cover' : 'object-contain'
+                    imageAspectRatios[slide._id] ? 'object-contain' : 'object-cover'
                   }`}
                   autoPlay
                   loop
@@ -125,13 +126,13 @@ const HeroCarousel = () => {
                   alt={slide.titulo || 'Banner'}
                   onLoad={(e) => handleImageLoad(e, slide._id)}
                   className={`absolute inset-0 w-full h-full ${
-                    imageAspectRatios[slide._id] ? 'object-cover' : 'object-contain'
+                    imageAspectRatios[slide._id] ? 'object-contain' : 'object-cover'
                   }`}
                   loading="lazy"
                 />
               ) : null}
-              {/* Overlay - Solo si es 16:9 (object-cover) */}
-              {imageAspectRatios[slide._id] && (
+              {/* Overlay - Solo si es widescreen (object-cover) */}
+              {!imageAspectRatios[slide._id] && (
                 <div className={`absolute inset-0 bg-gradient-to-r ${slide.gradient}`} />
               )}
               {/* Content */}
