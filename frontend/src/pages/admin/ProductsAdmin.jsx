@@ -389,11 +389,11 @@ const ProductsAdmin = () => {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Precio *</label>
-              <input type="number" value={form.precio} onChange={(e) => setForm({ ...form, precio: e.target.value })} className="input-field" required min="0" step="0.01" />
+              <input type="number" value={form.precio} onChange={(e) => setForm({ ...form, precio: e.target.value })} className="input-field" required min="0" step="any" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Precio oferta (opcional)</label>
-              <input type="number" value={form.precioOferta} onChange={(e) => setForm({ ...form, precioOferta: e.target.value })} className="input-field" min="0" step="0.01" />
+              <input type="number" value={form.precioOferta} onChange={(e) => setForm({ ...form, precioOferta: e.target.value })} className="input-field" min="0" step="any" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Stock</label>
