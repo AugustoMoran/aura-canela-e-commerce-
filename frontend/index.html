@@ -14,11 +14,21 @@
     <div id="root"></div>
     <!-- Mercado Pago SDK - Loaded early to prevent race conditions -->
     <script>
-      // Load MP SDK early with error handling
-      const script = document.createElement('script');
-      script.src = 'https://sdk.mercadopago.com/js/v2';
-      script.onerror = () => console.warn('⚠️ Failed to load Mercado Pago SDK from CDN');
-      document.head.appendChild(script);
+      // Load MP SDK with proper error handling
+      window.mpScriptReady = new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://sdk.mercadopago.com/js/v2';
+        script.async = true;
+        script.onload = () => {
+          console.log('✅ Mercado Pago SDK loaded from CDN');
+          resolve();
+        };
+        script.onerror = () => {
+          console.warn('⚠️ Failed to load Mercado Pago SDK from CDN');
+          reject(new Error('MP SDK failed to load'));
+        };
+        document.head.appendChild(script);
+      });
     </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>

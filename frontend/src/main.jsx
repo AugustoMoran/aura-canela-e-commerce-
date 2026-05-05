@@ -9,7 +9,7 @@ import { initializeMercadoPago } from './config/mercadopago';
 import './index.css';
 
 // Initialize Mercado Pago SDK
-initializeMercadoPago();
+initializeMercadoPago().catch(err => console.error('Failed to initialize MP:', err));
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
