@@ -389,15 +389,15 @@ const ProductsAdmin = () => {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Precio *</label>
-              <input type="number" value={form.precio} onChange={(e) => setForm({ ...form, precio: e.target.value })} className="input-field" required min="0" step="any" />
+              <input type="text" inputMode="decimal" value={form.precio} onChange={(e) => { const v = e.target.value; if (v === '' || !isNaN(v)) setForm({ ...form, precio: v }); }} className="input-field" required placeholder="0.00" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Precio oferta (opcional)</label>
-              <input type="number" value={form.precioOferta} onChange={(e) => setForm({ ...form, precioOferta: e.target.value })} className="input-field" min="0" step="any" />
+              <input type="text" inputMode="decimal" value={form.precioOferta} onChange={(e) => { const v = e.target.value; if (v === '' || !isNaN(v)) setForm({ ...form, precioOferta: v }); }} className="input-field" placeholder="0.00" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Stock</label>
-              <input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} className="input-field" required min="0" />
+              <input type="text" inputMode="numeric" value={form.stock} onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setForm({ ...form, stock: v }); }} className="input-field" required placeholder="0" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Categoría</label>
