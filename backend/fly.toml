@@ -1,4 +1,4 @@
-app = "m-sports-backend"
+app = "aura-canela-backend"
 primary_region = "gru"
 
 [build]

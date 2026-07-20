@@ -23,6 +23,7 @@ const webhookRoutes = require('./src/routes/webhook');
 const bannerRoutes = require('./src/routes/banners');
 const popupRoutes = require('./src/routes/popup');
 const chatRoutes = require('./src/routes/chat');
+const siteSettingsRoutes = require('./src/routes/siteSettings');
 const testRoutes = require('./src/routes/test');
 
 const app = express();
@@ -90,6 +91,7 @@ app.use('/api/webhook', webhookRoutes);
 app.use('/api/banners', bannerRoutes);
 app.use('/api/popup', popupRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/site-settings', siteSettingsRoutes);
 app.use('/api/test', testRoutes);
 
 // Health check

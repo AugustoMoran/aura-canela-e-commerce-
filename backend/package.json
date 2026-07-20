@@ -1,7 +1,7 @@
 {
-  "name": "m-sports-backend",
+  "name": "aura-canela-backend",
   "version": "1.0.0",
-  "description": "M Sports - Backend API",
+  "description": "Aura Canela - Backend API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
