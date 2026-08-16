@@ -38,7 +38,7 @@ app.set('trust proxy', 1);
 app.use(helmet());
 
 const allowedOrigins = [
-  process.env.FRONTEND_URL,
+  process.env.FRONTEND_URL?.replace(/\/+$/, ''),
   'https://aura-canela-e-commerce.vercel.app',
   'https://aura-canela-e-commerce-auracanela.vercel.app',
 ].filter(Boolean);
