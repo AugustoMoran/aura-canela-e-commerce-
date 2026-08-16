@@ -37,17 +37,24 @@ app.set('trust proxy', 1);
 // Security headers
 app.use(helmet());
 
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'https://aura-canela-e-commerce.vercel.app',
+  'https://aura-canela-e-commerce-auracanela.vercel.app',
+].filter(Boolean);
+
 // CORS
 app.use(
   cors({
     origin: (origin, callback) => {
-      // En desarrollo, acepta localhost en cualquier puerto
-      if (process.env.NODE_ENV === 'development' && origin?.includes('localhost')) {
+      const isLocalhost = origin?.includes('localhost');
+      const isAuraVercel = origin?.includes('aura-canela') && origin.endsWith('.vercel.app');
+
+      if (!origin) {
         callback(null, true);
-      } else if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) {
+      } else if (allowedOrigins.includes(origin) || isAuraVercel) {
         callback(null, true);
-      } else if (!origin) {
-        // Requests sin origin (como mobile apps, Postman, etc)
+      } else if (process.env.NODE_ENV === 'development' && isLocalhost) {
         callback(null, true);
       } else {
         callback(new Error('CORS no permitido'));

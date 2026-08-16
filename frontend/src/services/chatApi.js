@@ -5,7 +5,9 @@
  * stateful/interactive — caching doesn't apply here.
  */
 
-const BASE_URL = import.meta.env.VITE_API_URL || '/api';
+import { getApiBaseUrl } from '../config/apiBase';
+
+const BASE_URL = getApiBaseUrl();
 
 /**
  * Sends a message to the AI chat endpoint.
