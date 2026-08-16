@@ -80,6 +80,7 @@ const Header = () => {
             {/* Left: Navigation Menu (Desktop) */}
             <nav className="hidden lg:flex items-center gap-6 text-[13px] font-bold text-ink uppercase tracking-tight">
               <Link to="/" className="hover:text-primary-600 transition-colors">Inicio</Link>
+              <Link to="/#packs" className="hover:text-primary-600 transition-colors">Packs</Link>
               <div className="relative group">
                 <button className="flex items-center gap-1 hover:text-primary-600 transition-colors">
                   Productos <HiChevronDown className="group-hover:rotate-180 transition-transform" />
@@ -88,7 +89,7 @@ const Header = () => {
                   <Link to="/productos" className="block px-4 py-2 hover:bg-natural-dark text-ink font-semibold">Ver Todo</Link>
                   <div className="border-t border-natural-dark my-1" />
                   {categories.map(cat => (
-                    <Link key={cat._id} to={`/productos?categoria=${cat.nombre}`} className="block px-4 py-2 hover:bg-natural-dark text-ink capitalize font-medium">
+                    <Link key={cat._id} to={`/productos?categoria=${cat._id}`} className="block px-4 py-2 hover:bg-natural-dark text-ink capitalize font-medium">
                       {cat.nombre}
                     </Link>
                   ))}
@@ -233,6 +234,7 @@ const Header = () => {
         <div className="p-6 flex-1 overflow-y-auto">
           <nav className="flex flex-col gap-1">
             <Link to="/" onClick={() => dispatch(closeMenu())} className="py-4 text-lg font-black text-ink uppercase tracking-wider border-b border-natural">Inicio</Link>
+            <Link to="/#packs" onClick={() => dispatch(closeMenu())} className="py-4 text-lg font-black text-primary-600 uppercase tracking-wider border-b border-natural">Packs</Link>
             
             <div className="py-4 border-b border-natural">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Productos</p>
@@ -241,7 +243,7 @@ const Header = () => {
                 {categories.map(cat => (
                   <Link 
                     key={cat._id} 
-                    to={`/productos?categoria=${cat.nombre}`} 
+                    to={`/productos?categoria=${cat._id}`} 
                     onClick={() => dispatch(closeMenu())} 
                     className="py-2 text-sm font-bold text-primary-800 capitalize hover:text-primary-600"
                   >

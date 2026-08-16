@@ -31,7 +31,19 @@ const syncCart = async (userId, items) => {
   return getCart(userId);
 };
 
-const addToCart = async (userId, productoId, cantidad = 1, talla, color) => {
+const addToCart = async (userId, productoId, cantidad = 1, talla, color, packPayload = null) => {
+  if (packPayload?.isPack && packPayload.packInfo) {
+    let cart = await Cart.findOne({ usuario: userId });
+    if (!cart) cart = new Cart({ usuario: userId, items: [] });
+    cart.items.push({
+      isPack: true,
+      cantidad: 1,
+      packInfo: packPayload.packInfo,
+    });
+    await cart.save();
+    return getCart(userId);
+  }
+
   // Normalizar null/undefined
   talla = talla || null;
   color = color || null;
@@ -110,9 +122,13 @@ const removeFromCart = async (userId, productoId, talla, color) => {
   const cart = await Cart.findOne({ usuario: userId });
   if (!cart) return { items: [] };
 
-  cart.items = cart.items.filter((i) => 
-    !(i.producto.toString() === productoId && i.talla === talla && i.color === color)
-  );
+  cart.items = cart.items.filter((i) => {
+    if (i.isPack) {
+      return i.packInfo?.packId?.toString() !== productoId;
+    }
+    if (!i.producto) return true;
+    return !(i.producto.toString() === productoId && i.talla === talla && i.color === color);
+  });
   
   await cart.save();
   return getCart(userId);

@@ -40,12 +40,23 @@ const Checkout = () => {
     );
   }
 
-  const orderItems = items.map((i) => ({
-    producto: i.producto?._id || i.producto,
-    cantidad: i.cantidad,
-    talla: i.talla || null,
-    color: i.color || null,
-  }));
+  const orderItems = items.flatMap((i) => {
+    if (i.isPack && i.packInfo?.productosSeleccionados?.length) {
+      return i.packInfo.productosSeleccionados.map((p) => ({
+        producto: p.producto?._id || p.producto,
+        cantidad: p.cantidad,
+        talla: p.talla || null,
+        color: p.color || null,
+        packId: i.packInfo.packId,
+      }));
+    }
+    return [{
+      producto: i.producto?._id || i.producto,
+      cantidad: i.cantidad,
+      talla: i.talla || null,
+      color: i.color || null,
+    }];
+  });
 
   const [quoteShipping, { isLoading: isQuoting }] = useQuoteShippingMutation();
   const [zipCode, setZipCode] = useState('');

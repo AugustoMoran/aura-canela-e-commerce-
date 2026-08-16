@@ -57,6 +57,42 @@ const CartDrawer = () => {
           ) : (
             <ul className="space-y-4">
               {items.map((item) => {
+                if (item.isPack) {
+                  const packName = item.packInfo?.nombrePack || 'Pack';
+                  const packPrice = Number(item.packInfo?.precioPack) || 0;
+                  const packKey = item._cartKey || item.packInfo?.packId;
+                  return (
+                    <li key={packKey} className="flex gap-3">
+                      <div className="w-16 h-16 rounded-lg overflow-hidden bg-primary-50 flex-shrink-0 flex items-center justify-center text-2xl">
+                        📦
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium line-clamp-2 mb-1">{packName}</p>
+                        <p className="text-xs text-gray-500 mb-1">
+                          {item.packInfo?.cantidadUnidades} unidades · {formatCurrency(packPrice)}
+                        </p>
+                        <ul className="text-[11px] text-gray-500 space-y-0.5">
+                          {(item.packInfo?.productosSeleccionados || []).map((p, idx) => (
+                            <li key={idx}>
+                              {p.cantidad}x {p.nombre}
+                              {p.talla ? ` (${p.talla})` : ''}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="flex flex-col items-end justify-between">
+                        <button
+                          onClick={() => removeFromCart(packKey)}
+                          className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                        >
+                          <HiOutlineTrash size={16} />
+                        </button>
+                        <span className="text-sm font-bold">{formatCurrency(packPrice * (item.cantidad || 1))}</span>
+                      </div>
+                    </li>
+                  );
+                }
+
                 const producto = item.producto;
                 const id = producto?._id || producto;
                 const price = Number(producto?.precioOferta || producto?.precio || 0) || 0;

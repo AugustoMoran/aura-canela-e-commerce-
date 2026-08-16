@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import HeroCarousel from '../components/ui/HeroCarousel';
 import ProductCard from '../components/products/ProductCard';
+import HomePacks from '../components/products/HomePacks';
 import { useGetProductsQuery } from '../services/productsApi';
 import { useGetCategoriesQuery } from '../services/productsApi';
 import { HiArrowRight } from 'react-icons/hi';
@@ -43,6 +44,8 @@ const Home = () => {
       <HeroCarousel />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <HomePacks />
+
         {/* Featured products */}
         <section className="py-8">
           <div className="flex items-center justify-between mb-6">
@@ -77,10 +80,10 @@ const Home = () => {
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary-600/10 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-primary-600/20 transition-all duration-700"></div>
             <div className="relative z-10">
               <h2 className="text-3xl sm:text-4xl font-black mb-4 uppercase tracking-tighter">¡Comprá con confianza!</h2>
-              <p className="text-gray-400 text-lg max-w-lg">Pagá por Mercado Pago, transferencia o en el local. Los mejores productos en un solo lugar.</p>
+              <p className="text-gray-400 text-lg max-w-lg">Los packs son la forma más conveniente de armar tu pedido. Pagá por Mercado Pago, transferencia o en el local.</p>
             </div>
-            <Link to="/productos" className="relative z-10 bg-primary-600 text-white font-black px-10 py-5 rounded-2xl hover:bg-primary-700 transition-all whitespace-nowrap flex-shrink-0 shadow-[0_0_20px_rgba(220,38,38,0.4)] uppercase tracking-widest text-sm">
-              Ver productos
+            <Link to="/#packs" className="relative z-10 bg-primary-600 text-white font-black px-10 py-5 rounded-2xl hover:bg-primary-700 transition-all whitespace-nowrap flex-shrink-0 shadow-[0_0_20px_rgba(220,38,38,0.4)] uppercase tracking-widest text-sm">
+              Ver packs
             </Link>
           </div>
         </section>

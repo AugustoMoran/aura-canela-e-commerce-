@@ -1,5 +1,6 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const Pack = require('../models/Pack');
 const Coupon = require('../models/Coupon');
 const generateOrderCode = require('../utils/generateOrderCode');
 const {
@@ -12,6 +13,8 @@ const createOrder = async ({ userId, guestData, items, cuponCodigo, metodoPago }
   // Validate and build items
   let subtotal = 0;
   const orderItems = [];
+
+  const packPriceCache = {};
 
   for (const item of items) {
     const product = await Product.findOne({ _id: item.producto, isActive: true });
@@ -39,16 +42,28 @@ const createOrder = async ({ userId, guestData, items, cuponCodigo, metodoPago }
       }
     }
 
+    let precio = product.precioOferta || product.precio;
+    if (item.packId) {
+      if (!packPriceCache[item.packId]) {
+        const pack = await Pack.findById(item.packId);
+        if (!pack || pack.activo === false) {
+          throw Object.assign(new Error('El pack seleccionado no está disponible.'), { statusCode: 400 });
+        }
+        packPriceCache[item.packId] = pack.precio / pack.cantidadUnidades;
+      }
+      precio = packPriceCache[item.packId];
+    }
+
     orderItems.push({
       producto: product._id,
       nombre: product.nombre,
-      precio: product.precioOferta || product.precio,
+      precio,
       cantidad: item.cantidad,
       imagen: product.imagenes[0]?.url || '',
       talla: item.talla,
       color: item.color,
     });
-    subtotal += (product.precioOferta || product.precio) * item.cantidad;
+    subtotal += precio * item.cantidad;
   }
 
   // Handle coupon

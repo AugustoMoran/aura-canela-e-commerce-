@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { useGetPacksByCategoryQuery } from '../../services/packsApi';
 import { useGetProductsQuery } from '../../services/productsApi';
 import { useAddToCartMutation } from '../../services/cartApi';
+import { useDispatch, useSelector } from 'react-redux';
+import { addItem, openCart } from '../../features/cart/cartSlice';
+import { selectCurrentUser } from '../../features/auth/authSlice';
 import { formatCurrency } from '../../utils/formatCurrency';
 import toast from 'react-hot-toast';
 
@@ -10,6 +13,8 @@ const CategoryPacks = ({ categoriaId, categoriaNombre }) => {
   const { data: productsData } = useGetProductsQuery({ categoria: categoriaId, limit: 50 }, { skip: !categoriaId });
 
   const [addToCart, { isLoading: isAdding }] = useAddToCartMutation();
+  const dispatch = useDispatch();
+  const user = useSelector(selectCurrentUser);
 
   const [selectedPack, setSelectedPack] = useState(null);
   const [selectedProducts, setSelectedProductos] = useState([]); // Array de objetos { producto, cantidad, talla, color }
@@ -70,7 +75,6 @@ const CategoryPacks = ({ categoriaId, categoriaNombre }) => {
     }
 
     try {
-      // Estructura de ítem de Pack
       const packCartItem = {
         isPack: true,
         cantidad: 1,
@@ -90,8 +94,13 @@ const CategoryPacks = ({ categoriaId, categoriaNombre }) => {
         },
       };
 
-      await addToCart(packCartItem).unwrap();
-      toast.success('¡Pack agregado al carrito exitosamente!');
+      if (user) {
+        await addToCart(packCartItem).unwrap();
+      } else {
+        dispatch(addItem(packCartItem));
+      }
+      dispatch(openCart());
+      toast.success('¡Pack agregado al carrito!');
 
       setSelectedPack(null);
       setSelectedProductos([]);

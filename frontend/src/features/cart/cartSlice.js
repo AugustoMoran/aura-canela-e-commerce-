@@ -22,6 +22,16 @@ const cartSlice = createSlice({
   initialState,
   reducers: {
     addItem: (state, action) => {
+      if (action.payload.isPack) {
+        state.items.push({
+          isPack: true,
+          cantidad: action.payload.cantidad || 1,
+          packInfo: action.payload.packInfo,
+          _cartKey: `pack-${action.payload.packInfo?.packId}-${Date.now()}`,
+        });
+        saveToStorage(state.items);
+        return;
+      }
       const { producto, cantidad = 1, talla, color } = action.payload;
       const productoId = producto._id || producto;
       const existing = state.items.find((i) => {
@@ -36,9 +46,11 @@ const cartSlice = createSlice({
       saveToStorage(state.items);
     },
     removeItem: (state, action) => {
-      state.items = state.items.filter(
-        (i) => (i.producto._id || i.producto) !== action.payload
-      );
+      const key = action.payload;
+      state.items = state.items.filter((i) => {
+        if (i.isPack) return i._cartKey !== key && i.packInfo?.packId !== key;
+        return (i.producto?._id || i.producto) !== key;
+      });
       saveToStorage(state.items);
     },
     updateQuantity: (state, action) => {
@@ -77,6 +89,7 @@ export const selectCartCount = (state) =>
   state.cart.items.reduce((sum, i) => sum + i.cantidad, 0);
 export const selectCartTotal = (state) =>
   state.cart.items.reduce((sum, i) => {
+    if (i.isPack) return sum + (Number(i.packInfo?.precioPack) || 0) * (i.cantidad || 1);
     const price = i.producto?.precioOferta || i.producto?.precio || 0;
     return sum + price * i.cantidad;
   }, 0);

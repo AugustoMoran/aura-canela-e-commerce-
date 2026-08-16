@@ -24,7 +24,14 @@ const addItem = async (req, res, next) => {
     // Convertir strings vacíos a null para consistencia
     talla = talla === '' ? null : talla;
     color = color === '' ? null : color;
-    const cart = await cartService.addToCart(req.user._id, productoId, cantidad, talla, color);
+    const cart = await cartService.addToCart(
+      req.user._id,
+      productoId,
+      cantidad,
+      talla,
+      color,
+      req.body.isPack ? req.body : null
+    );
     res.json(cart);
   } catch (error) {
     next(error);
