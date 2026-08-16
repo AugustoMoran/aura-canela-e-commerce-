@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🛒 Ecommerce Fullstack PRO
+# 🛒 Aura Canela - Ecommerce Fullstack
 
-**Plataforma de comercio electrónico completa construida con React, Node.js y MongoDB**
+**Plataforma de comercio electrónico de alta costura construida con React, Node.js y MongoDB**
 
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
 [![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org)

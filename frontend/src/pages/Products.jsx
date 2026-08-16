@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useGetProductsQuery, useGetCategoriesQuery } from '../services/productsApi';
 import ProductCard from '../components/products/ProductCard';
+import CategoryPacks from '../components/products/CategoryPacks';
 import useInfiniteScroll from '../hooks/useInfiniteScroll';
 import { HiAdjustments, HiX } from 'react-icons/hi';
 
@@ -175,6 +176,14 @@ const Products = () => {
 
         {/* Product grid */}
         <div className="flex-1 min-w-0">
+          {/* Módulo de Packs por Categoría cuando hay una categoría seleccionada */}
+          {categoria && (
+            <CategoryPacks
+              categoriaId={categoria}
+              categoriaNombre={categories.find((c) => c._id === categoria)?.nombre || 'Categoría'}
+            />
+          )}
+
           {allProducts.length === 0 && !isFetching ? (
             <div className="text-center py-16 text-gray-400">
               <p className="text-lg mb-2">No hay productos</p>

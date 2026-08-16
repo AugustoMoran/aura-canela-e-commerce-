@@ -6,6 +6,15 @@ import { formatCurrency } from '../../utils/formatCurrency';
 import toast from 'react-hot-toast';
 import { HiOutlineCheckCircle, HiOutlineTrash, HiOutlineChevronDown, HiOutlineChevronUp } from 'react-icons/hi';
 
+const PEDIDO_ESTADOS = [
+  'Pedido recibido',
+  'En preparación',
+  'Preparado',
+  'Listo para despachar',
+  'Despachado',
+  'Cancelado',
+];
+
 const ENVIO_OPTIONS = ['pendiente', 'preparando', 'enviado', 'entregado', 'cancelado'];
 const PAGO_OPTIONS = ['pendiente', 'aprobado', 'rechazado', 'reembolsado'];
 
@@ -148,13 +157,26 @@ const OrdersAdmin = () => {
                   </select>
                 </td>
                 <td className="px-4 py-3">
-                  <select
-                    value={order.estadoEnvio}
-                    onChange={(e) => handleUpdate(order._id, { estadoEnvio: e.target.value })}
-                    className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white"
-                  >
-                    {ENVIO_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
-                  </select>
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-gray-500 block font-bold">Estado Interno:</label>
+                    <select
+                      value={order.estadoPedido || 'Pedido recibido'}
+                      onChange={(e) => handleUpdate(order._id, { estadoPedido: e.target.value })}
+                      className="text-xs border border-gray-300 rounded-lg px-2 py-1 bg-amber-50 font-semibold"
+                    >
+                      {PEDIDO_ESTADOS.map((o) => (
+                        <option key={o} value={o}>
+                          {o}
+                        </option>
+                      ))}
+                    </select>
+
+                    {order.datosEnvio?.trackingNumber && (
+                      <div className="text-[10px] text-gray-600">
+                        <span className="font-bold">Tracking:</span> {order.datosEnvio.trackingNumber}
+                      </div>
+                    )}
+                  </div>
                 </td>
                 <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">
                   {new Date(order.createdAt).toLocaleDateString('es-AR')}

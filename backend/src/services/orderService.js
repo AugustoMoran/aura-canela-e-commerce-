@@ -90,9 +90,27 @@ const createOrder = async ({ userId, guestData, items, cuponCodigo, metodoPago }
     cupon: cuponCodigo ? cuponCodigo.toUpperCase() : null,
     metodoPago: metodoPago || 'pendiente',
     estadoPago: 'pendiente',      // Always start as pending; webhook (MP) or admin (WhatsApp) approves
+    estadoPedido: 'Pedido recibido',
+    historialEstadoPedido: [
+      {
+        fecha: new Date(),
+        estado: 'Pedido recibido',
+        usuario: userId ? 'Cliente' : 'Invitado',
+      }
+    ],
     estadoEnvio: 'pendiente',     // Always start as pending until admin dispatches
     stockDeducido: false,
   });
+
+  // Notificación automática al admin
+  const { createNotification } = require('./notificationService');
+  createNotification({
+    tipo: 'pedido',
+    titulo: 'Nuevo Pedido Recibido',
+    descripcion: `Se ha recibido el pedido ${order.codigo} por $${total}`,
+    entidadRelacionada: 'Order',
+    entidadId: order._id,
+  }).catch(err => console.error('Error enviando notificación de pedido:', err));
 
   // Stock is NOT deducted here.
   // MercadoPago: deducted in the webhook when payment is approved.
@@ -174,13 +192,64 @@ const getOrderByCode = async (codigo) => {
   return order;
 };
 
-const updateOrderStatus = async (id, estadoPago, estadoEnvio) => {
-  const update = {};
-  if (estadoPago) update.estadoPago = estadoPago;
-  if (estadoEnvio) update.estadoEnvio = estadoEnvio;
-
-  const order = await Order.findByIdAndUpdate(id, update, { new: true }).populate('usuario', 'nombre apellido email');
+const updateOrderStatus = async (id, { estadoPago, estadoEnvio, estadoPedido, trackingNumber, usuarioNombre = 'Administrador' }) => {
+  const order = await Order.findById(id).populate('usuario', 'nombre apellido email');
   if (!order) throw Object.assign(new Error('Orden no encontrada.'), { statusCode: 404 });
+
+  const { createNotification } = require('./notificationService');
+
+  if (estadoPago && order.estadoPago !== estadoPago) {
+    order.estadoPago = estadoPago;
+    createNotification({
+      tipo: 'pago',
+      titulo: `Pago ${estadoPago}`,
+      descripcion: `El pago del pedido ${order.codigo} ha pasado a estado ${estadoPago}`,
+      entidadRelacionada: 'Order',
+      entidadId: order._id,
+    }).catch(err => console.error(err));
+  }
+
+  if (estadoEnvio && order.estadoEnvio !== estadoEnvio) {
+    order.estadoEnvio = estadoEnvio;
+  }
+
+  if (estadoPedido && order.estadoPedido !== estadoPedido) {
+    order.estadoPedido = estadoPedido;
+    order.historialEstadoPedido.push({
+      fecha: new Date(),
+      estado: estadoPedido,
+      usuario: usuarioNombre,
+    });
+
+    // Si se pasa a Despachado, disparar proceso de creación de envío en Correo Argentino
+    if (estadoPedido === 'Despachado') {
+      order.estadoEnvio = 'enviado';
+      const shippingService = require('./shippingService');
+      try {
+        await shippingService.processOrderShipment(order._id);
+      } catch (err) {
+        console.error('Error creando envío automático:', err.message);
+      }
+    } else if (estadoPedido === 'Cancelado') {
+      order.estadoEnvio = 'cancelado';
+      order.estadoPago = 'rechazado';
+    }
+
+    createNotification({
+      tipo: 'pedido',
+      titulo: `Pedido ${estadoPedido}`,
+      descripcion: `El pedido ${order.codigo} cambió su estado a: ${estadoPedido}`,
+      entidadRelacionada: 'Order',
+      entidadId: order._id,
+    }).catch(err => console.error(err));
+  }
+
+  if (trackingNumber) {
+    order.datosEnvio = order.datosEnvio || {};
+    order.datosEnvio.trackingNumber = trackingNumber;
+  }
+
+  await order.save();
   return order;
 };
 

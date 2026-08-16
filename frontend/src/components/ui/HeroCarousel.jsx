@@ -10,79 +10,73 @@ import 'swiper/css/effect-fade';
 
 const DEFAULT_SLIDES = [
   {
-    _id: '1',
-    imagen: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1400&q=80',
-    video: '',
-    titulo: 'Nueva colección',
-    subtitulo: 'Descubrí los mejores productos al mejor precio',
+    _id: 'default1',
+    imagen: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2070&auto=format&fit=crop',
+    titulo: 'Bienvenidos a Aura Canela',
+    subtitulo: 'Moda exclusiva para vos',
     mostrarTexto: true,
-    ctaTexto: 'Ver productos',
     ctaLink: '/productos',
-    mostrarBoton: false,
-    autoplay: false,
-    gradient: 'from-gray-950/80 to-transparent',
+    esImagenValida: true
   },
   {
-    _id: '2',
-    imagen: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1400&q=80',
-    video: '',
-    titulo: 'Ofertas especiales',
-    subtitulo: 'Hasta 40% de descuento en productos seleccionados',
+    _id: 'default2',
+    imagen: 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?q=80&w=2070&auto=format&fit=crop',
+    titulo: 'Nueva Temporada',
+    subtitulo: 'Descubrí lo último en tendencias',
     mostrarTexto: true,
-    ctaTexto: 'Ver ofertas',
-    ctaLink: '/productos?sort=price-asc',
-    mostrarBoton: false,
-    autoplay: false,
-    gradient: 'from-gray-950/80 to-transparent',
-  },
-  {
-    _id: '3',
-    imagen: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1400&q=80',
-    video: '',
-    titulo: 'Envíos a todo el país',
-    subtitulo: 'Rápido, seguro y al mejor precio',
-    mostrarTexto: true,
-    ctaTexto: 'Comprar ahora',
     ctaLink: '/productos',
-    mostrarBoton: false,
-    autoplay: false,
-    gradient: 'from-gray-950/80 to-transparent',
-  },
+    esImagenValida: true
+  }
 ];
 
 const HeroCarousel = () => {
-  const handleImageLoad = (e, slideId) => {
-    // Ya no necesitamos calcular aspect ratio
-    // aspect-video + object-contain maneja todo
-  };
-
   const { data: apiBanners } = useGetBannersQuery(true);
-  const slides = apiBanners && apiBanners.length > 0 ? apiBanners.map(b => {
-    // Normalizar valores
-    const videoUrl = b.video?.trim() || '';
-    const imagenUrl = b.imagen?.trim() || '';
-    const esVideoValido = videoUrl && videoUrl.startsWith('http');
-    const esImagenValida = imagenUrl && imagenUrl.startsWith('http');
-    
-    // Convertir a booleans - handle string, number, and boolean formats
-    // Only true if explicitly truthy: true, "true", 1, "1"
-    const isTruthy = (val) => val === true || val === 'true' || val === 1 || val === '1';
-    const mostrarTexto = isTruthy(b.mostrarTexto);
-    const mostrarBoton = isTruthy(b.mostrarBoton);
-    
-    return {
+  
+  const slides = apiBanners && apiBanners.length > 0 
+    ? apiBanners.map(b => ({
       ...b,
-      video: videoUrl,
-      imagen: imagenUrl,
-      esVideoValido,
-      esImagenValida,
-      mostrarTexto,
-      mostrarBoton,
-      autoplay: b.autoplay === true || b.autoplay === 'true',
-    };
-  }) : DEFAULT_SLIDES;
+      esVideoValido: b.video?.trim().startsWith('http'),
+      esImagenValida: b.imagen?.trim().startsWith('http'),
+      mostrarTexto: b.mostrarTexto === true || b.mostrarTexto === 'true',
+      mostrarBoton: b.mostrarBoton === true || b.mostrarBoton === 'true'
+    })) 
+    : DEFAULT_SLIDES;
+
   return (
-    <div className="w-full">
+    <div className="w-full relative group hero-slider">
+      <style>{`
+        .hero-slider .swiper-button-next,
+        .hero-slider .swiper-button-prev {
+          color: #DC2626 !important;
+          background: rgba(242, 236, 228, 0.8);
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          transition: all 0.3s;
+        }
+        .hero-slider .swiper-button-next:after,
+        .hero-slider .swiper-button-prev:after {
+          font-size: 18px;
+          font-weight: bold;
+        }
+        .hero-slider .swiper-button-next:hover,
+        .hero-slider .swiper-button-prev:hover {
+          background: #DC2626;
+          color: #F2ECE4 !important;
+        }
+        .hero-slider .swiper-pagination-bullet {
+          background: #000000 !important;
+          opacity: 0.3;
+          width: 10px;
+          height: 10px;
+        }
+        .hero-slider .swiper-pagination-bullet-active {
+          background: #DC2626 !important;
+          opacity: 1;
+          width: 24px;
+          border-radius: 5px;
+        }
+      `}</style>
       <Swiper
         modules={[Autoplay, Navigation, Pagination, EffectFade]}
         effect="fade"
@@ -91,59 +85,50 @@ const HeroCarousel = () => {
         navigation
         pagination={{ clickable: true }}
         loop={slides.length > 1}
-        className="w-full aspect-video"
+        className="w-full aspect-[21/9] sm:aspect-[21/7]"
       >
         {slides.map((slide) => (
           <SwiperSlide key={slide._id}>
-            <div className="relative w-full h-full overflow-hidden bg-white">
-              {/* Video o Imagen */}
+            <div className="relative w-full h-full overflow-hidden bg-natural">
+              {/* Contenido Visual */}
               {slide.esVideoValido ? (
                 <video
                   src={slide.video}
-                  className="absolute inset-0 w-full h-full object-contain bg-white"
                   autoPlay
                   loop
                   muted
                   playsInline
+                  className="w-full h-full object-cover"
                 />
-              ) : slide.esImagenValida ? (
+              ) : (
                 <img
                   src={slide.imagen}
-                  alt={slide.titulo || 'Banner'}
-                  className="absolute inset-0 w-full h-full object-contain bg-white"
-                  loading="lazy"
+                  alt={slide.titulo}
+                  className="w-full h-full object-cover"
                 />
-              ) : null}
-              {/* Overlay - para widescreen images solo */}
-              {/* Content */}
-              <div className="relative z-10 h-full flex items-center">
-                <div className="max-w-7xl mx-auto px-6 sm:px-10">
-                  <div className="max-w-xl animate-slide-up">
-                    {slide.mostrarTexto && (
-                      <>
-                        {slide.titulo?.trim() && (
-                          <h1 className="text-3xl sm:text-5xl font-extrabold text-white mb-4 leading-tight drop-shadow-lg">
-                            {slide.titulo}
-                          </h1>
-                        )}
-                        {slide.subtitulo?.trim() && (
-                          <p className="text-base sm:text-xl text-white/90 mb-8 drop-shadow">
-                            {slide.subtitulo}
-                          </p>
-                        )}
-                      </>
-                    )}
-                    {slide.mostrarBoton && slide.ctaTexto?.trim() && (
-                      <Link
-                        to={slide.ctaLink || '/'}
-                        className="inline-flex items-center gap-2 bg-primary-400 text-gray-900 font-bold px-8 py-3 rounded-full shadow-lg hover:bg-primary-300 transition-all hover:scale-105 active:scale-95"
-                      >
-                        {slide.ctaTexto}
-                      </Link>
-                    )}
+              )}
+              
+              {/* Overlay y Texto */}
+              <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent" />
+              
+              {slide.mostrarTexto && (
+                <div className="absolute inset-0 flex items-center px-8 sm:px-16 md:px-24">
+                  <div className="max-w-2xl text-white">
+                    <h1 className="text-4xl sm:text-6xl font-black uppercase tracking-tighter mb-4 animate-slide-up">
+                      {slide.titulo}
+                    </h1>
+                    <p className="text-lg sm:text-2xl text-natural/90 mb-8 font-medium max-w-lg">
+                      {slide.subtitulo}
+                    </p>
+                    <Link
+                      to={slide.ctaLink || '/productos'}
+                      className="inline-block bg-primary-600 hover:bg-primary-700 text-white font-black px-8 py-4 rounded-xl transition-all transform hover:scale-105 active:scale-95 uppercase tracking-widest text-sm shadow-2xl"
+                    >
+                      Ver Colección
+                    </Link>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </SwiperSlide>
         ))}

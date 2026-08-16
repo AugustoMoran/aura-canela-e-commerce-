@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { selectCartItems, selectCartTotal, clearGuestCart } from '../features/cart/cartSlice';
-import { useDispatch } from 'react-redux';
 import { useCreateOrderMutation, useValidateCouponMutation } from '../services/ordersApi';
 import { useClearCartMutation } from '../services/cartApi';
+import { useQuoteShippingMutation } from '../services/shippingApi';
 import { selectCurrentUser } from '../features/auth/authSlice';
 import { formatCurrency } from '../utils/formatCurrency';
 import { generateWhatsAppLink } from '../utils/generateWhatsAppLink';
 import toast from 'react-hot-toast';
-import { FaWhatsapp, FaCreditCard } from 'react-icons/fa';
+import { FaWhatsapp, FaCreditCard, FaTruck } from 'react-icons/fa';
 
 const REQUIRED_GUEST_FIELDS = ['nombre', 'apellido', 'email', 'telefono'];
 
@@ -47,7 +47,37 @@ const Checkout = () => {
     color: i.color || null,
   }));
 
-  const finalTotal = couponResult ? Math.max(0, total - couponResult.descuento) : total;
+  const [quoteShipping, { isLoading: isQuoting }] = useQuoteShippingMutation();
+  const [zipCode, setZipCode] = useState('');
+  const [shippingOptions, setShippingOptions] = useState([]);
+  const [selectedShipping, setSelectedShipping] = useState(null);
+
+  const handleQuoteShipping = async () => {
+    if (!zipCode || zipCode.trim().length !== 4) {
+      toast.error('Ingrese un Código Postal válido (4 dígitos).');
+      return;
+    }
+
+    try {
+      const res = await quoteShipping({
+        destinationZip: zipCode.trim(),
+        items,
+      }).unwrap();
+
+      setShippingOptions(res.data.opciones || []);
+      if (res.data.opciones?.length > 0) {
+        setSelectedShipping(res.data.opciones[0]);
+        toast.success('Opciones de envío con Correo Argentino obtenidas');
+      }
+    } catch (err) {
+      toast.error(err?.data?.message || 'Error al cotizar envío con Correo Argentino');
+    }
+  };
+
+  const shippingCost = selectedShipping ? selectedShipping.costo : 0;
+  const finalTotal = couponResult
+    ? Math.max(0, total - couponResult.descuento) + shippingCost
+    : total + shippingCost;
 
   const handleApplyCoupon = async () => {
     try {
@@ -147,6 +177,63 @@ const Checkout = () => {
               </div>
             </div>
           )}
+
+          {/* Shipping option */}
+          <div className="card p-6">
+            <h2 className="font-semibold text-lg mb-4 flex items-center gap-2">
+              <FaTruck className="text-primary-600" /> Cálculo de Envío (Correo Argentino)
+            </h2>
+            <div className="flex gap-2 mb-4">
+              <input
+                type="text"
+                value={zipCode}
+                onChange={(e) => setZipCode(e.target.value)}
+                placeholder="Código Postal (ej: 1000)"
+                maxLength={4}
+                className="input-field"
+              />
+              <button
+                type="button"
+                onClick={handleQuoteShipping}
+                disabled={isQuoting}
+                className="btn-secondary whitespace-nowrap disabled:opacity-50"
+              >
+                {isQuoting ? 'Cotizando...' : 'Calcular Envío'}
+              </button>
+            </div>
+
+            {shippingOptions.length > 0 && (
+              <div className="space-y-3">
+                <p className="text-xs font-semibold text-gray-700">Opciones Disponibles:</p>
+                {shippingOptions.map((opt) => (
+                  <label
+                    key={opt.servicioCode}
+                    className={`flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                      selectedShipping?.servicioCode === opt.servicioCode
+                        ? 'border-primary-500 bg-primary-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="radio"
+                        name="shippingOption"
+                        checked={selectedShipping?.servicioCode === opt.servicioCode}
+                        onChange={() => setSelectedShipping(opt)}
+                      />
+                      <div>
+                        <p className="font-medium text-sm text-gray-900">{opt.nombre}</p>
+                        <p className="text-xs text-gray-500">Estimado: {opt.diasEntregaEstimados}</p>
+                      </div>
+                    </div>
+                    <span className="font-bold text-primary-600 text-sm">
+                      {formatCurrency(opt.costo)}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Coupon */}
           <div className="card p-6">

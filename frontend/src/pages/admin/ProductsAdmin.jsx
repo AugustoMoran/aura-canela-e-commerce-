@@ -30,6 +30,10 @@ const EMPTY = {
   stock: '', 
   categoria: '', 
   tags: '',
+  peso: '',
+  largo: '',
+  ancho: '',
+  alto: '',
   tallas: { habilitadas: [], rango: '' },
   colores: []
 };
@@ -42,6 +46,10 @@ const normalizeForm = (formData) => ({
   stock: String(formData.stock || ''),
   categoria: String(formData.categoria || ''),
   tags: String(formData.tags || ''),
+  peso: String(formData.peso || ''),
+  largo: String(formData.largo || ''),
+  ancho: String(formData.ancho || ''),
+  alto: String(formData.alto || ''),
   tallas: formData.tallas || { habilitadas: [], rango: '' },
   colores: formData.colores || [],
 });
@@ -197,6 +205,17 @@ const ProductsAdmin = () => {
         return;
       }
 
+      const pesoVal = Number(form.peso);
+      const largoVal = Number(form.largo);
+      const anchoVal = Number(form.ancho);
+      const altoVal = Number(form.alto);
+
+      if (pesoVal <= 0 || largoVal <= 0 || anchoVal <= 0 || altoVal <= 0) {
+        toast.error('Peso, Largo, Ancho y Alto deben ser valores mayores a 0 para el cálculo de envíos');
+        setUploading(false);
+        return;
+      }
+
       const payload = {
         nombre: form.nombre.trim(),
         descripcion: form.descripcion.trim(),
@@ -204,6 +223,10 @@ const ProductsAdmin = () => {
         precioOferta: form.precioOferta ? Number(form.precioOferta) : undefined,
         stock: Number(form.stock) || 0,
         categoria: form.categoria || undefined,
+        peso: pesoVal,
+        largo: largoVal,
+        ancho: anchoVal,
+        alto: altoVal,
         tags: form.tags ? form.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
         tallas: form.tallas,
         colores: form.colores,
@@ -420,6 +443,61 @@ const ProductsAdmin = () => {
             <div className="md:col-span-2">
               <label className="block text-sm font-medium mb-1">Tags (separados por coma)</label>
               <input type="text" value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} className="input-field" placeholder="verano, oferta, nuevo" />
+            </div>
+
+            {/* Dimensiones y Peso para Envíos */}
+            <div className="md:col-span-2 border-t border-b border-gray-200 py-3 my-2">
+              <h3 className="font-semibold text-sm text-gray-800 mb-2">🚚 Dimensiones y Peso para Envíos (Correo Argentino)</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Peso (kg) *</label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={form.peso}
+                    onChange={(e) => { const v = e.target.value; if (v === '' || !isNaN(v)) setForm({ ...form, peso: v }); }}
+                    className="input-field"
+                    required
+                    placeholder="Ej: 0.5"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Largo (cm) *</label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={form.largo}
+                    onChange={(e) => { const v = e.target.value; if (v === '' || !isNaN(v)) setForm({ ...form, largo: v }); }}
+                    className="input-field"
+                    required
+                    placeholder="Ej: 20"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Ancho (cm) *</label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={form.ancho}
+                    onChange={(e) => { const v = e.target.value; if (v === '' || !isNaN(v)) setForm({ ...form, ancho: v }); }}
+                    className="input-field"
+                    required
+                    placeholder="Ej: 15"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Alto (cm) *</label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={form.alto}
+                    onChange={(e) => { const v = e.target.value; if (v === '' || !isNaN(v)) setForm({ ...form, alto: v }); }}
+                    className="input-field"
+                    required
+                    placeholder="Ej: 10"
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Tallas section */}

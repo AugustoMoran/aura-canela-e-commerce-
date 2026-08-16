@@ -31,7 +31,7 @@ function ProductCard({ product, onAddToCart, onBuyNow }) {
   const price = Number.isFinite(priceNum) && priceNum > 0 ? formatCurrency(priceNum) : 'Sin precio';
 
   return (
-    <div className="flex flex-col gap-1.5 p-2 rounded-lg border border-pearl-dark bg-white hover:border-primary-400 transition-colors w-full">
+    <div className="flex flex-col gap-1.5 p-2 rounded-lg border border-natural-dark bg-white hover:border-primary-400 transition-colors w-full">
       {/* Top row: image, name, price */}
       <div className="flex items-start gap-2">
         {image ? (
@@ -41,7 +41,7 @@ function ProductCard({ product, onAddToCart, onBuyNow }) {
             className="w-12 h-12 object-cover rounded-md flex-shrink-0"
           />
         ) : (
-          <div className="w-12 h-12 rounded-md bg-pearl flex items-center justify-center flex-shrink-0">
+          <div className="w-12 h-12 rounded-md bg-natural flex items-center justify-center flex-shrink-0">
             <FiShoppingBag size={16} className="text-primary-600" />
           </div>
         )}
@@ -93,7 +93,7 @@ function Message({ msg, onAddToCart, onBuyNow }) {
           className={`px-3 py-2 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-words ${
             isUser
               ? 'bg-primary-400 text-ink rounded-tr-sm'
-              : 'bg-white border border-pearl-dark text-ink rounded-tl-sm shadow-sm'
+              : 'bg-white border border-natural-dark text-ink rounded-tl-sm shadow-sm'
           }`}
         >
           {msg.text}
@@ -123,7 +123,7 @@ function TypingIndicator() {
       <div className="w-7 h-7 rounded-full bg-primary-400 flex items-center justify-center flex-shrink-0">
         <RiRobot2Line size={15} className="text-ink" />
       </div>
-      <div className="px-3 py-2.5 rounded-2xl rounded-tl-sm bg-white border border-pearl-dark shadow-sm">
+      <div className="px-3 py-2.5 rounded-2xl rounded-tl-sm bg-white border border-natural-dark shadow-sm">
         <div className="flex gap-1 items-center h-4">
           <span className="w-1.5 h-1.5 rounded-full bg-ink/30 animate-bounce [animation-delay:0ms]" />
           <span className="w-1.5 h-1.5 rounded-full bg-ink/30 animate-bounce [animation-delay:150ms]" />
@@ -268,7 +268,7 @@ export default function ChatWidget() {
     <>
       {/* ── Chat window ───────────────────────────────────────────────────── */}
       {open && (
-        <div className="fixed bottom-24 right-4 z-50 w-[340px] max-w-[calc(100vw-2rem)] flex flex-col rounded-2xl shadow-2xl overflow-hidden bg-pearl border border-pearl-dark animate-slide-up">
+        <div className="fixed bottom-24 right-4 z-50 w-[340px] max-w-[calc(100vw-2rem)] flex flex-col rounded-2xl shadow-2xl overflow-hidden bg-natural border border-natural-dark animate-slide-up">
 
           {/* Header */}
           <div className="flex items-center gap-2.5 px-4 py-3 bg-ink text-white">
@@ -337,7 +337,7 @@ export default function ChatWidget() {
               placeholder="Escribí tu consulta..."
               rows={1}
               disabled={loading}
-              className="flex-1 resize-none rounded-xl border border-pearl-dark bg-white px-3 py-2 text-sm text-ink placeholder:text-ink/40 focus:outline-none focus:border-primary-400 transition-colors disabled:opacity-60 max-h-24 overflow-y-auto"
+              className="flex-1 resize-none rounded-xl border border-natural-dark bg-white px-3 py-2 text-sm text-ink placeholder:text-ink/40 focus:outline-none focus:border-primary-400 transition-colors disabled:opacity-60 max-h-24 overflow-y-auto"
               style={{ lineHeight: '1.4' }}
             />
             <button

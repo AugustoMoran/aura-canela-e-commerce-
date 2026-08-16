@@ -33,60 +33,75 @@ const ProductCard = ({ product }) => {
   };
 
   return (
-    <Link to={`/productos/${product._id}`} className="card group cursor-pointer animate-fade-in">
+    <Link to={`/productos/${product._id}`} className="bg-white rounded-2xl overflow-hidden group shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col h-full border border-natural-dark">
       {/* Image */}
-      <div className="relative overflow-hidden aspect-square bg-white">
+      <div className="relative overflow-hidden aspect-[4/5] bg-natural/30">
         <img
           src={image}
           alt={product.nombre}
           loading="lazy"
-          className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
         {hasDiscount && (
-          <span className="absolute top-2 left-2 badge bg-red-500 text-white font-bold text-xs px-2 py-1">
-            -{Math.round(((product.precio - product.precioOferta) / product.precio) * 100)}%
+          <span className="absolute top-3 left-3 bg-primary-600 text-white font-black text-[10px] px-2 py-1 rounded-full uppercase tracking-widest shadow-lg">
+            -{Math.round(((product.precio - product.precioOferta) / product.precio) * 100)}% OFF
           </span>
         )}
-        {product.stock === 0 && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <span className="text-white font-semibold text-sm bg-black/60 px-3 py-1 rounded-full">Sin stock</span>
-          </div>
-        )}
-        {/* Hover actions */}
-        <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
-          <button
-            onClick={handleAddToCart}
-            disabled={product.stock === 0}
-            className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1 shadow-lg"
-          >
-            <HiOutlineShoppingCart size={14} />
-            Agregar
-          </button>
-        </div>
+        
         {/* Favorite */}
         <button
           onClick={handleFavorite}
-          className="absolute top-2 right-2 w-8 h-8 bg-white rounded-full shadow flex items-center justify-center transition-all hover:scale-110"
+          className="absolute top-3 right-3 w-9 h-9 bg-white/80 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center transition-all hover:bg-white hover:scale-110 z-10"
         >
           {isFavorite ? (
-            <HiHeart size={16} className="text-red-500" />
+            <HiHeart size={18} className="text-primary-600" />
           ) : (
-            <HiOutlineHeart size={16} className="text-gray-500" />
+            <HiOutlineHeart size={18} className="text-ink" />
           )}
         </button>
+
+        {/* Quick Add Button (Desktop only on hover) */}
+        {product.stock > 0 && (
+          <div className="absolute inset-x-0 bottom-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 hidden md:block">
+            <button
+              onClick={handleAddToCart}
+              className="w-full bg-ink/90 hover:bg-primary-600 text-white text-xs font-black py-3 px-4 rounded-xl backdrop-blur-sm transition-colors uppercase tracking-widest shadow-2xl flex items-center justify-center gap-2"
+            >
+              <HiOutlineShoppingCart size={16} />
+              Agregar al carrito
+            </button>
+          </div>
+        )}
+
+        {product.stock === 0 && (
+          <div className="absolute inset-0 bg-ink/40 backdrop-blur-[2px] flex items-center justify-center">
+            <span className="text-white font-black text-xs bg-ink/80 px-4 py-2 rounded-full uppercase tracking-[0.2em]">Agotado</span>
+          </div>
+        )}
       </div>
 
       {/* Info */}
-      <div className="p-3">
-        <p className="text-xs text-gray-400 mb-1 truncate">{product.categoria?.nombre}</p>
-        <h3 className="font-semibold text-sm line-clamp-2 mb-2 text-gray-800 group-hover:text-primary-600 transition-colors">
+      <div className="p-4 flex-1 flex flex-col bg-white">
+        <p className="text-[10px] text-primary-600 font-bold mb-1 uppercase tracking-widest">{product.categoria?.nombre || 'General'}</p>
+        <h3 className="font-bold text-sm line-clamp-2 mb-3 text-ink group-hover:text-primary-600 transition-colors flex-1 leading-tight">
           {product.nombre}
         </h3>
-        <div className="flex items-baseline gap-2">
-          <span className="font-bold text-gray-900">{formatCurrency(displayPrice)}</span>
+        
+        <div className="flex flex-col gap-0.5">
           {hasDiscount && (
-            <span className="text-xs text-gray-400 line-through">{formatCurrency(product.precio)}</span>
+            <span className="text-xs text-gray-400 line-through font-medium">{formatCurrency(product.precio)}</span>
           )}
+          <div className="flex items-center justify-between">
+            <span className="font-black text-xl text-primary-700 tracking-tighter">
+              {formatCurrency(displayPrice)}
+            </span>
+            <button 
+              onClick={handleAddToCart}
+              className="md:hidden w-8 h-8 rounded-full bg-natural flex items-center justify-center text-ink hover:bg-primary-600 hover:text-white transition-colors"
+            >
+              <HiOutlineShoppingCart size={16} />
+            </button>
+          </div>
         </div>
       </div>
     </Link>

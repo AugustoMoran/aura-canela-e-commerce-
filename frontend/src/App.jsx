@@ -23,12 +23,16 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 const Dashboard = lazy(() => import('./pages/admin/Dashboard'));
 const ProductsAdmin = lazy(() => import('./pages/admin/ProductsAdmin'));
 const CategoriesAdmin = lazy(() => import('./pages/admin/CategoriesAdmin'));
+const PacksAdmin = lazy(() => import('./pages/admin/PacksAdmin'));
 const OrdersAdmin = lazy(() => import('./pages/admin/OrdersAdmin'));
+const ShippingAdmin = lazy(() => import('./pages/admin/ShippingAdmin'));
+const NotificationsAdmin = lazy(() => import('./pages/admin/NotificationsAdmin'));
 const DeliveryAdmin = lazy(() => import('./pages/admin/DeliveryAdmin'));
 const CouponsAdmin = lazy(() => import('./pages/admin/CouponsAdmin'));
 const CloudinaryAdmin = lazy(() => import('./pages/admin/CloudinaryAdmin'));
 const BannersAdmin = lazy(() => import('./pages/admin/BannersAdmin'));
 const PopupAdmin = lazy(() => import('./pages/admin/PopupAdmin'));
+const SettingsAdmin = lazy(() => import('./pages/admin/SettingsAdmin'));
 
 // Guards
 const ProtectedRoute = ({ children }) => {
@@ -88,12 +92,16 @@ const App = () => (
       <Route path="/admin" element={<AdminRoute><Dashboard /></AdminRoute>} />
       <Route path="/admin/productos" element={<AdminRoute><ProductsAdmin /></AdminRoute>} />
       <Route path="/admin/categorias" element={<AdminRoute><CategoriesAdmin /></AdminRoute>} />
+      <Route path="/admin/packs" element={<AdminRoute><PacksAdmin /></AdminRoute>} />
       <Route path="/admin/ordenes" element={<AdminRoute><OrdersAdmin /></AdminRoute>} />
+      <Route path="/admin/envios" element={<AdminRoute><ShippingAdmin /></AdminRoute>} />
+      <Route path="/admin/notificaciones" element={<AdminRoute><NotificationsAdmin /></AdminRoute>} />
       <Route path="/admin/despacho" element={<AdminRoute><DeliveryAdmin /></AdminRoute>} />
       <Route path="/admin/cupones" element={<AdminRoute><CouponsAdmin /></AdminRoute>} />
       <Route path="/admin/cloudinary" element={<AdminRoute><CloudinaryAdmin /></AdminRoute>} />
       <Route path="/admin/banners" element={<AdminRoute><BannersAdmin /></AdminRoute>} />
       <Route path="/admin/popup" element={<AdminRoute><PopupAdmin /></AdminRoute>} />
+      <Route path="/admin/configuracion" element={<AdminRoute><SettingsAdmin /></AdminRoute>} />
 
       {/* 404 */}
       <Route path="*" element={<NotFound />} />

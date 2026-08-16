@@ -9,7 +9,7 @@ services:
       - "5000:5000"
     environment:
       - PORT=5000
-      - MONGO_URI=mongodb+srv://msportsbsports_db_user:nzrmfOlFqUWb3cVI@cluster0.zdr9e3q.mongodb.net/?appName=Cluster0
+      - MONGO_URI=${MONGO_URI}
       - JWT_SECRET=jwt-secret-ecommerce-2024-xK9mP3nQ
       - REFRESH_TOKEN_SECRET=refresh-secret-ecommerce-2024-zL7wR5vY
       - FRONTEND_URL=http://localhost:5173
@@ -46,7 +46,7 @@ services:
       - VITE_ADMIN_EMAIL=m.sports.b.sports@gmail.com
       - VITE_INSTAGRAM_URL=https://www.instagram.com/m.sports_sin_limites?igsh=amYxdTU5aG42MHhj
       - VITE_TIKTOK_URL=https://www.tiktok.com/@sin_limite_136
-      - VITE_STORE_NAME=M Sports - Sin Limites
+      - VITE_STORE_NAME=Aura Canela
     volumes:
       - ./frontend:/app
       - /app/node_modules

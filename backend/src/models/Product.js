@@ -36,6 +36,12 @@ const productSchema = new mongoose.Schema(
     },
     colores: [colorSchema],
     
+    // Dimensiones y peso para Envíos (Correo Argentino / Logística)
+    peso: { type: Number, default: 0, min: 0 }, // En kg
+    largo: { type: Number, default: 0, min: 0 }, // En cm
+    ancho: { type: Number, default: 0, min: 0 }, // En cm
+    alto: { type: Number, default: 0, min: 0 }, // En cm
+
     isActive: { type: Boolean, default: true },
     deletedAt: { type: Date, default: null },
     vendidos: { type: Number, default: 0 },

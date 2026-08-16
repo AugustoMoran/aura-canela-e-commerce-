@@ -9,18 +9,26 @@ import { HiArrowRight } from 'react-icons/hi';
 const CategoryCard = ({ category }) => (
   <Link
     to={`/productos?categoria=${category._id}`}
-    className="card group flex flex-col items-center p-5 hover:shadow-xl hover:scale-[1.03] transition-all duration-200"
+    className="group relative h-48 sm:h-64 rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500"
   >
     {category.imagen ? (
-      <img src={category.imagen} alt={category.nombre} className="w-14 h-14 rounded-full object-cover mb-3" />
+      <img 
+        src={category.imagen} 
+        alt={category.nombre} 
+        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+      />
     ) : (
-      <div className="w-14 h-14 bg-gray-900 rounded-full flex items-center justify-center mb-3">
-        <span className="text-primary-400 font-bold text-xl">{category.nombre[0]}</span>
+      <div className="w-full h-full bg-ink flex items-center justify-center">
+        <span className="text-natural-500 font-bold text-4xl opacity-20">{category.nombre[0]}</span>
       </div>
     )}
-    <span className="font-semibold text-sm text-center group-hover:text-gray-600 transition-colors">
-      {category.nombre}
-    </span>
+    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent group-hover:from-primary-900/90 transition-all" />
+    <div className="absolute bottom-0 left-0 right-0 p-4 transform translate-y-1 group-hover:translate-y-0 transition-transform">
+      <span className="block font-black text-white text-base sm:text-lg uppercase tracking-wider text-center group-hover:scale-105 transition-transform">
+        {category.nombre}
+      </span>
+      <div className="w-8 h-1 bg-primary-600 mx-auto mt-2 scale-x-0 group-hover:scale-x-100 transition-transform origin-center" />
+    </div>
   </Link>
 );
 
@@ -30,10 +38,10 @@ const Home = () => {
   const { data: categories = [] } = useGetCategoriesQuery();
 
   return (
-    <div>
+    <div className="bg-natural font-sans">
       {/* Hero */}
       <HeroCarousel />
-
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Featured products */}
         <section className="py-8">
@@ -64,13 +72,14 @@ const Home = () => {
         )}
 
         {/* Banner CTA */}
-        <section className="py-8">
-          <div className="bg-gray-900 rounded-3xl p-8 sm:p-12 flex flex-col sm:flex-row items-center justify-between gap-6 text-white">
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold mb-2">¡Comprá con confianza!</h2>
-              <p className="text-gray-400">Pagá por Mercado Pago o WhatsApp. Envíos a todo el país.</p>
+        <section className="py-12">
+          <div className="bg-ink rounded-[40px] p-8 sm:p-16 flex flex-col sm:flex-row items-center justify-between gap-10 text-white border-2 border-primary-600 shadow-2xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary-600/10 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-primary-600/20 transition-all duration-700"></div>
+            <div className="relative z-10">
+              <h2 className="text-3xl sm:text-4xl font-black mb-4 uppercase tracking-tighter">¡Comprá con confianza!</h2>
+              <p className="text-gray-400 text-lg max-w-lg">Pagá por Mercado Pago, transferencia o en el local. Los mejores productos en un solo lugar.</p>
             </div>
-            <Link to="/productos" className="bg-primary-400 text-gray-900 font-bold px-8 py-3 rounded-full hover:bg-primary-300 transition-all whitespace-nowrap flex-shrink-0 shadow-lg">
+            <Link to="/productos" className="relative z-10 bg-primary-600 text-white font-black px-10 py-5 rounded-2xl hover:bg-primary-700 transition-all whitespace-nowrap flex-shrink-0 shadow-[0_0_20px_rgba(220,38,38,0.4)] uppercase tracking-widest text-sm">
               Ver productos
             </Link>
           </div>
