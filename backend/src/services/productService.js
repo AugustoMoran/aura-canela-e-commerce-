@@ -1,46 +1,50 @@
 const Product = require('../models/Product');
 const Category = require('../models/Category');
+const mongoose = require('mongoose');
 const { cloudinary } = require('../config/cloudinary');
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 const getProducts = async ({ page = 1, limit = 12, categoria, search, sort, sinStock }) => {
+  const cleanPage = Math.max(1, parseInt(page, 10) || 1);
+  const cleanLimit = Math.max(1, Math.min(parseInt(limit, 10) || 12, 100));
+  const cleanCategoria = typeof categoria === 'string' ? categoria.trim() : '';
+  const cleanSearch = typeof search === 'string' ? search.trim() : '';
+  const cleanSort = typeof sort === 'string' ? sort.trim() : 'newest';
+  const cleanSinStock = sinStock === 'true' || sinStock === true;
 
-  // --- Validación y limpieza de parámetros ---
-  let cleanPage = parseInt(page) || 1;
-  let cleanLimit = Math.max(1, Math.min(parseInt(limit) || 12, 100));
-  let cleanCategoria = (typeof categoria === 'string') ? categoria.trim() : '';
-  let cleanSearch = (typeof search === 'string') ? search.trim() : '';
-  let cleanSort = (typeof sort === 'string') ? sort.trim() : 'newest';
-  let cleanSinStock = sinStock === 'true' || sinStock === true;
-
-  // --- Construcción de query robusta ---
   const query = { isActive: true, deletedAt: null };
-  if (cleanCategoria && cleanCategoria !== '' && cleanCategoria !== 'todas' && cleanCategoria !== 'null' && cleanCategoria !== 'undefined') {
-    query.categoria = cleanCategoria;
+
+  if (cleanCategoria && !['todas', 'null', 'undefined'].includes(cleanCategoria.toLowerCase())) {
+    const isId = mongoose.Types.ObjectId.isValid(cleanCategoria) && String(new mongoose.Types.ObjectId(cleanCategoria)) === cleanCategoria;
+    if (isId) {
+      query.categoria = cleanCategoria;
+    } else {
+      const cat = await Category.findOne({
+        nombre: { $regex: `^${escapeRegex(cleanCategoria)}$`, $options: 'i' },
+        isActive: true,
+      }).select('_id');
+      query.categoria = cat?._id || new mongoose.Types.ObjectId();
+    }
   }
-  // Solo usar $text si la búsqueda tiene al menos 2 caracteres
+
   if (cleanSearch.length >= 2) {
-    query.$text = { $search: cleanSearch };
+    const rx = { $regex: escapeRegex(cleanSearch), $options: 'i' };
+    query.$or = [{ nombre: rx }, { descripcion: rx }, { tags: rx }];
   }
+
   if (cleanSinStock) {
     query.stock = { $lte: 0 };
-  } else if (cleanCategoria && cleanCategoria !== '' && cleanCategoria !== 'todas' && cleanCategoria !== 'null' && cleanCategoria !== 'undefined') {
-    // Si se filtra por categoría específica, mostrar solo productos con stock > 0
-    query.stock = { $gt: 0 };
   }
-  // Si es 'todas' o vacío, no filtrar por stock (mostrar todos los productos activos)
 
-  // --- Ordenamiento robusto ---
   const sortOptions = {
     newest: { createdAt: -1 },
     oldest: { createdAt: 1 },
     'price-asc': { precio: 1 },
     'price-desc': { precio: -1 },
-    popular: { vendidos: -1 },
+    popular: { vendidos: -1, createdAt: -1 },
   };
-  const sortBy = sortOptions[cleanSort] || sortOptions['newest'];
-
-  // --- Logs para depuración ---
-  // console.log('[getProducts] Query:', query, 'Sort:', sortBy, 'Page:', cleanPage, 'Limit:', cleanLimit);
+  const sortBy = sortOptions[cleanSort] || sortOptions.newest;
 
   const total = await Product.countDocuments(query);
   const products = await Product.find(query)
@@ -53,7 +57,7 @@ const getProducts = async ({ page = 1, limit = 12, categoria, search, sort, sinS
   return {
     products,
     page: cleanPage,
-    pages: Math.ceil(total / cleanLimit),
+    pages: Math.max(1, Math.ceil(total / cleanLimit) || 1),
     total,
   };
 };
