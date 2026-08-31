@@ -39,7 +39,7 @@ const SettingsAdmin = () => {
         <div className="bg-white rounded-2xl shadow-xl border border-natural-dark overflow-hidden">
           <div className="bg-primary-700 p-6">
             <h2 className="text-2xl font-bold text-white uppercase tracking-tight">Configuración del Sitio</h2>
-            <p className="text-red-100 text-sm opacity-80">Personaliza elementos generales de la tienda</p>
+            <p className="text-primary-100 text-sm opacity-80">Personaliza elementos generales de la tienda</p>
           </div>
 
           <form onSubmit={handleSubmit} className="p-8 space-y-8">

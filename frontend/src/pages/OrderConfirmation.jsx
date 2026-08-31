@@ -17,7 +17,7 @@ const OrderConfirmation = () => {
         {isSuccess ? (
           <HiCheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
         ) : (
-          <HiXCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <HiXCircle className="w-16 h-16 text-primary-600 mx-auto mb-4" />
         )}
 
         <h1 className="text-2xl font-bold mb-2">

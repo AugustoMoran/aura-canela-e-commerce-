@@ -47,7 +47,7 @@ const HeroCarousel = () => {
       <style>{`
         .hero-slider .swiper-button-next,
         .hero-slider .swiper-button-prev {
-          color: #DC2626 !important;
+          color: #E11D8A !important;
           background: rgba(242, 236, 228, 0.8);
           width: 40px;
           height: 40px;
@@ -61,7 +61,7 @@ const HeroCarousel = () => {
         }
         .hero-slider .swiper-button-next:hover,
         .hero-slider .swiper-button-prev:hover {
-          background: #DC2626;
+          background: #E11D8A;
           color: #F2ECE4 !important;
         }
         .hero-slider .swiper-pagination-bullet {
@@ -71,7 +71,7 @@ const HeroCarousel = () => {
           height: 10px;
         }
         .hero-slider .swiper-pagination-bullet-active {
-          background: #DC2626 !important;
+          background: #E11D8A !important;
           opacity: 1;
           width: 24px;
           border-radius: 5px;

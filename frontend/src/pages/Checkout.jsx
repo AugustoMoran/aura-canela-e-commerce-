@@ -164,7 +164,7 @@ const Checkout = () => {
                 ].map(({ name, label, type = 'text', required }) => (
                   <div key={name} className={name === 'email' ? 'col-span-2' : ''}>
                     <label className="block text-sm font-medium mb-1">
-                      {label} {required && <span className="text-red-500">*</span>}
+                      {label} {required && <span className="text-primary-600">*</span>}
                     </label>
                     <input
                       type={type}

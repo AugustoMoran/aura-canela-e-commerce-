@@ -83,7 +83,7 @@ const CartDrawer = () => {
                       <div className="flex flex-col items-end justify-between">
                         <button
                           onClick={() => removeFromCart(packKey)}
-                          className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                          className="text-gray-400 hover:text-primary-600 transition-colors p-1"
                         >
                           <HiOutlineTrash size={16} />
                         </button>
@@ -130,7 +130,7 @@ const CartDrawer = () => {
                     <div className="flex flex-col items-end justify-between">
                       <button
                         onClick={() => removeFromCart(id, item.talla, item.color)}
-                        className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                        className="text-gray-400 hover:text-primary-600 transition-colors p-1"
                       >
                         <HiOutlineTrash size={16} />
                       </button>
@@ -159,7 +159,7 @@ const CartDrawer = () => {
             </Link>
             <button
               onClick={() => clearCart()}
-              className="w-full py-2 px-4 rounded-lg border border-red-300 text-red-600 hover:bg-red-50 transition-colors font-medium text-sm"
+              className="w-full py-2 px-4 rounded-lg border border-primary-300 text-primary-600 hover:bg-primary-50 transition-colors font-medium text-sm"
             >
               Vaciar carrito
             </button>

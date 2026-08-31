@@ -147,7 +147,7 @@ const PacksAdmin = () => {
             className={`p-4 mb-6 rounded-md ${
               message.type === 'success'
                 ? 'bg-green-50 border border-green-200 text-green-700'
-                : 'bg-red-50 border border-red-200 text-red-700'
+                : 'bg-primary-50 border border-primary-200 text-primary-700'
             }`}
           >
             {message.text}
@@ -208,7 +208,7 @@ const PacksAdmin = () => {
                         className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                           pack.activo
                             ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
+                            : 'bg-primary-100 text-primary-800'
                         }`}
                       >
                         {pack.activo ? 'Activo' : 'Inactivo'}
@@ -224,7 +224,7 @@ const PacksAdmin = () => {
                       <button
                         onClick={() => handleDelete(pack._id)}
                         disabled={isDeleting}
-                        className="text-red-600 hover:text-red-900 disabled:opacity-50"
+                        className="text-primary-600 hover:text-primary-800 disabled:opacity-50"
                       >
                         Eliminar
                       </button>

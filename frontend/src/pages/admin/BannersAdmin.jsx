@@ -14,7 +14,7 @@ const GRADIENTS = [
   { label: 'Azul', value: 'from-blue-900/70 to-transparent' },
   { label: 'Violeta', value: 'from-purple-900/70 to-transparent' },
   { label: 'Verde', value: 'from-emerald-900/70 to-transparent' },
-  { label: 'Rojo', value: 'from-red-900/70 to-transparent' },
+  { label: 'Fucsia', value: 'from-primary-700/70 to-transparent' },
   { label: 'Naranja', value: 'from-orange-900/70 to-transparent' },
   { label: 'Amarillo', value: 'from-yellow-600/60 to-transparent' },
   { label: 'Amarillo claro', value: 'from-yellow-400/50 to-transparent' },
@@ -256,7 +256,7 @@ const BannersAdmin = () => {
                     <button
                       type="button"
                       onClick={handleRemoveVideo}
-                      className="absolute top-0 right-0 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 transform translate-x-1 -translate-y-1"
+                      className="absolute top-0 right-0 bg-primary-500 hover:bg-primary-600 text-white rounded-full p-1 transform translate-x-1 -translate-y-1"
                     >
                       <HiX size={12} />
                     </button>
@@ -420,7 +420,7 @@ const BannersAdmin = () => {
                 </button>
                 <button
                   onClick={() => handleDelete(b._id)}
-                  className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                  className="p-2 text-primary-500 hover:bg-primary-50 rounded-lg"
                 >
                   <HiOutlineTrash size={16} />
                 </button>

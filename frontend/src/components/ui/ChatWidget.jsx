@@ -304,7 +304,7 @@ export default function ChatWidget() {
             {loading && <TypingIndicator />}
 
             {error && (
-              <p className="text-xs text-red-500 text-center py-1 px-3 bg-red-50 rounded-lg">
+              <p className="text-xs text-primary-600 text-center py-1 px-3 bg-primary-50 rounded-lg">
                 {error}
               </p>
             )}
@@ -366,7 +366,7 @@ export default function ChatWidget() {
 
         {/* Unread badge */}
         {!open && unread > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary-600 text-white text-[10px] font-bold flex items-center justify-center">
             {unread}
           </span>
         )}

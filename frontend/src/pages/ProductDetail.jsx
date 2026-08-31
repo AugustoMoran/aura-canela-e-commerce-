@@ -175,7 +175,7 @@ const ProductDetail = () => {
               onClick={() => toggleFavorite(product._id)}
               className="p-2 rounded-xl hover:bg-gray-100 transition-colors flex-shrink-0"
             >
-              {isFavorite ? <HiHeart size={22} className="text-red-500" /> : <HiOutlineHeart size={22} className="text-gray-400" />}
+              {isFavorite ? <HiHeart size={22} className="text-primary-600" /> : <HiOutlineHeart size={22} className="text-gray-400" />}
             </button>
           </div>
 
@@ -186,7 +186,7 @@ const ProductDetail = () => {
             {hasDiscount && (
               <>
                 <span className="text-lg text-gray-400 line-through">{formatCurrency(product.precio)}</span>
-                <span className="badge bg-red-100 text-red-600 font-bold">
+                <span className="badge bg-primary-100 text-primary-700 font-bold">
                   -{Math.round(((product.precio - product.precioOferta) / product.precio) * 100)}%
                 </span>
               </>
@@ -200,7 +200,7 @@ const ProductDetail = () => {
             {product.stock > 0 ? (
               <span className="badge bg-green-100 text-green-700">✓ En stock ({product.stock} disponibles)</span>
             ) : (
-              <span className="badge bg-red-100 text-red-600">Sin stock</span>
+              <span className="badge bg-primary-100 text-primary-700">Sin stock</span>
             )}
           </div>
 

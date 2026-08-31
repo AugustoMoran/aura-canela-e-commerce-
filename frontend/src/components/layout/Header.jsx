@@ -184,11 +184,11 @@ const Header = () => {
                       <Link to="/perfil" className="block px-4 py-2 text-sm hover:bg-natural font-medium">Mi Perfil</Link>
                       <Link to="/mis-ordenes" className="block px-4 py-2 text-sm hover:bg-natural font-medium">Mis Pedidos</Link>
                       {isAdmin && (
-                        <Link to="/admin" className="block px-4 py-2 text-sm text-primary-600 font-bold hover:bg-red-50 border-t border-natural mt-1 pt-2">
+                        <Link to="/admin" className="block px-4 py-2 text-sm text-primary-600 font-bold hover:bg-primary-50 border-t border-natural mt-1 pt-2">
                           Panel Administrador
                         </Link>
                       )}
-                      <button onClick={logout} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 border-t border-natural mt-1 pt-2">
+                      <button onClick={logout} className="w-full text-left px-4 py-2 text-sm text-primary-600 hover:bg-primary-50 border-t border-natural mt-1 pt-2">
                         Cerrar Sesión
                       </button>
                     </>

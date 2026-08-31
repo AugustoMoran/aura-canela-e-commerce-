@@ -605,7 +605,7 @@ const ProductsAdmin = () => {
                       <button
                         type="button"
                         onClick={() => removerColor(i)}
-                        className="p-1 rounded hover:bg-red-50 text-red-400 flex-shrink-0"
+                        className="p-1 rounded hover:bg-primary-50 text-primary-400 flex-shrink-0"
                       >
                         <HiX size={16} />
                       </button>
@@ -628,7 +628,7 @@ const ProductsAdmin = () => {
                     <button
                       type="button"
                       onClick={() => handleRemoveExistingImage(img.publicId)}
-                      className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5 shadow"
+                      className="absolute -top-1.5 -right-1.5 bg-primary-500 text-white rounded-full p-0.5 shadow"
                     >
                       <HiX size={10} />
                     </button>
@@ -641,7 +641,7 @@ const ProductsAdmin = () => {
                     <button
                       type="button"
                       onClick={() => removeNewImage(i)}
-                      className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5 shadow"
+                      className="absolute -top-1.5 -right-1.5 bg-primary-500 text-white rounded-full p-0.5 shadow"
                     >
                       <HiX size={10} />
                     </button>
@@ -674,7 +674,7 @@ const ProductsAdmin = () => {
                     <button
                       type="button"
                       onClick={() => handleRemoveExistingVideo(vid.publicId)}
-                      className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5 shadow"
+                      className="absolute -top-1.5 -right-1.5 bg-primary-500 text-white rounded-full p-0.5 shadow"
                     >
                       <HiX size={10} />
                     </button>
@@ -690,7 +690,7 @@ const ProductsAdmin = () => {
                     <button
                       type="button"
                       onClick={() => removeNewVideo(i)}
-                      className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5 shadow"
+                      className="absolute -top-1.5 -right-1.5 bg-primary-500 text-white rounded-full p-0.5 shadow"
                     >
                       <HiX size={10} />
                     </button>
@@ -771,7 +771,7 @@ const ProductsAdmin = () => {
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <span className={`badge text-xs ${p.stock > 5 ? 'bg-green-100 text-green-700' : p.stock > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-600'}`}>
+                      <span className={`badge text-xs ${p.stock > 5 ? 'bg-green-100 text-green-700' : p.stock > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-primary-100 text-primary-600'}`}>
                         {p.stock}
                       </span>
                       {p.stock <= 5 && (
@@ -791,7 +791,7 @@ const ProductsAdmin = () => {
                     <button onClick={() => handleEdit(p)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500">
                       <HiOutlinePencil size={14} />
                     </button>
-                    <button onClick={() => handleDelete(p._id)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-400">
+                    <button onClick={() => handleDelete(p._id)} className="p-1.5 rounded-lg hover:bg-primary-50 text-primary-400">
                       <HiOutlineTrash size={14} />
                     </button>
                   </div>

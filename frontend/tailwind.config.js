@@ -5,21 +5,21 @@ export default {
     extend: {
       colors: {
         primary: {
-          50:  '#FEF2F2',
-          100: '#FEE2E2',
-          200: '#FECACA',
-          300: '#FCA5A5',
-          400: '#F87171',
-          500: '#EF4444', 
-          600: '#DC2626', // Main red
-          700: '#B91C1C', // Darker red
-          800: '#991B1B',
-          900: '#000000', // Pure black
+          50:  '#FDF2F8',
+          100: '#FCE7F3',
+          200: '#FBCFE8',
+          300: '#F9A8D4',
+          400: '#F472B6',
+          500: '#EC4899',
+          600: '#E11D8A', // Fucsia
+          700: '#BE185D',
+          800: '#9D174D',
+          900: '#000000',
         },
         accent: {
-          400: '#F87171',
-          500: '#EF4444',
-          600: '#DC2626',
+          400: '#F472B6',
+          500: '#EC4899',
+          600: '#E11D8A',
         },
         natural: {
           DEFAULT: '#F8F0E5', // Color exacto extraído del fondo del logo

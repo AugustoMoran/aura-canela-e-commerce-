@@ -8,13 +8,13 @@ const STATUS_LABELS = {
   preparando: { label: 'Preparando', color: 'bg-blue-100 text-blue-700' },
   enviado: { label: 'Enviado', color: 'bg-purple-100 text-purple-700' },
   entregado: { label: 'Entregado', color: 'bg-green-100 text-green-700' },
-  cancelado: { label: 'Cancelado', color: 'bg-red-100 text-red-600' },
+  cancelado: { label: 'Cancelado', color: 'bg-primary-100 text-primary-700' },
 };
 
 const PAY_LABELS = {
   pendiente: { label: 'Pendiente', color: 'bg-yellow-100 text-yellow-700' },
   aprobado: { label: 'Aprobado', color: 'bg-green-100 text-green-700' },
-  rechazado: { label: 'Rechazado', color: 'bg-red-100 text-red-600' },
+  rechazado: { label: 'Rechazado', color: 'bg-primary-100 text-primary-700' },
 };
 
 const OrderHistory = () => {

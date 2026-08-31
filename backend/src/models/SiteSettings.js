@@ -16,7 +16,7 @@ const siteSettingsSchema = new mongoose.Schema(
     },
     primaryColor: {
       type: String,
-      default: '#B91C1C' // Darker red per user requirement
+      default: '#E11D8A'
     },
     naturalColor: {
       type: String,

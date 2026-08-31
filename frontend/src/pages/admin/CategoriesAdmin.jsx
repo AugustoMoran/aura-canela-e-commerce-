@@ -106,7 +106,7 @@ const CategoriesAdmin = () => {
               <button onClick={() => handleEdit(c)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500">
                 <HiOutlinePencil size={14} />
               </button>
-              <button onClick={() => handleDelete(c._id)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-400">
+              <button onClick={() => handleDelete(c._id)} className="p-1.5 rounded-lg hover:bg-primary-50 text-primary-400">
                 <HiOutlineTrash size={14} />
               </button>
             </div>

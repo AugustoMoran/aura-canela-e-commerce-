@@ -25,7 +25,7 @@ const CloudinaryAdmin = () => {
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
                   <div
-                    className={`h-3 rounded-full transition-all ${storage.alert ? 'bg-red-500' : storage.percentage > 60 ? 'bg-yellow-400' : 'bg-green-500'}`}
+                    className={`h-3 rounded-full transition-all ${storage.alert ? 'bg-primary-500' : storage.percentage > 60 ? 'bg-yellow-400' : 'bg-green-500'}`}
                     style={{ width: `${Math.min(100, storage.percentage)}%` }}
                   />
                 </div>
@@ -33,7 +33,7 @@ const CloudinaryAdmin = () => {
               </div>
 
               {storage.alert && (
-                <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm">
+                <div className="bg-primary-50 border border-primary-200 rounded-xl p-4 text-primary-700 text-sm">
                   ⚠️ El almacenamiento supera el 80%. Considerá eliminar imágenes no utilizadas o ampliar el plan.
                 </div>
               )}

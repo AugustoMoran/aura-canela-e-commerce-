@@ -158,7 +158,7 @@ const Products = () => {
               <button
                 type="button"
                 onClick={clearFilters}
-                className="w-full flex items-center gap-2 text-red-500 text-sm hover:text-red-700"
+                className="w-full flex items-center gap-2 text-primary-600 text-sm hover:text-primary-700"
               >
                 <HiX size={14} /> Limpiar filtros
               </button>

@@ -199,7 +199,7 @@ const OrdersAdmin = () => {
                       <button
                         onClick={() => handleDelete(order)}
                         title="Eliminar del historial"
-                        className="p-1 rounded-lg hover:bg-red-50 text-red-400"
+                        className="p-1 rounded-lg hover:bg-primary-50 text-primary-400"
                       >
                         <HiOutlineTrash size={13} />
                       </button>

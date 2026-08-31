@@ -82,7 +82,7 @@ const Home = () => {
               <h2 className="text-3xl sm:text-4xl font-black mb-4 uppercase tracking-tighter">¡Comprá con confianza!</h2>
               <p className="text-gray-400 text-lg max-w-lg">Los packs son la forma más conveniente de armar tu pedido. Pagá por Mercado Pago, transferencia o en el local.</p>
             </div>
-            <Link to="/#packs" className="relative z-10 bg-primary-600 text-white font-black px-10 py-5 rounded-2xl hover:bg-primary-700 transition-all whitespace-nowrap flex-shrink-0 shadow-[0_0_20px_rgba(220,38,38,0.4)] uppercase tracking-widest text-sm">
+            <Link to="/#packs" className="relative z-10 bg-primary-600 text-white font-black px-10 py-5 rounded-2xl hover:bg-primary-700 transition-all whitespace-nowrap flex-shrink-0 shadow-[0_0_20px_rgba(225,29,138,0.4)] uppercase tracking-widest text-sm">
               Ver packs
             </Link>
           </div>
