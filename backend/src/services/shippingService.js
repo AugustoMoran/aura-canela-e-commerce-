@@ -46,7 +46,7 @@ const calculateShippingQuote = async ({ items, destinationZip, providerName = 'c
   let maxLargo = 0;
   let maxAncho = 0;
 
-  const missingSpecsProducts = [];
+  const CLOTHING_DEFAULTS = { peso: 0.35, largo: 30, ancho: 20, alto: 8 };
 
   for (const item of items) {
     let prod = null;
@@ -69,14 +69,10 @@ const calculateShippingQuote = async ({ items, destinationZip, providerName = 'c
           const ancho = subProd.ancho || 0;
           const alto = subProd.alto || 0;
 
-          if (!peso || !largo || !ancho || !alto) {
-            missingSpecsProducts.push(subProd.nombre);
-          }
-
-          totalWeight += peso * qty;
-          totalVolume += (largo * ancho * alto) * qty;
-          if (largo > maxLargo) maxLargo = largo;
-          if (ancho > maxAncho) maxAncho = ancho;
+          totalWeight += (peso || CLOTHING_DEFAULTS.peso) * qty;
+          totalVolume += ((largo || CLOTHING_DEFAULTS.largo) * (ancho || CLOTHING_DEFAULTS.ancho) * (alto || CLOTHING_DEFAULTS.alto)) * qty;
+          if ((largo || CLOTHING_DEFAULTS.largo) > maxLargo) maxLargo = largo || CLOTHING_DEFAULTS.largo;
+          if ((ancho || CLOTHING_DEFAULTS.ancho) > maxAncho) maxAncho = ancho || CLOTHING_DEFAULTS.ancho;
         }
       }
       continue;
@@ -89,23 +85,11 @@ const calculateShippingQuote = async ({ items, destinationZip, providerName = 'c
       const ancho = prod.ancho || 0;
       const alto = prod.alto || 0;
 
-      // REQUERIMIENTO 2: Si el producto no tiene peso o medidas cargadas, solicitar completar dichos campos
-      if (!peso || !largo || !ancho || !alto) {
-        missingSpecsProducts.push(prod.nombre);
-      }
-
-      totalWeight += peso * qty;
-      totalVolume += (largo * ancho * alto) * qty;
-      if (largo > maxLargo) maxLargo = largo;
-      if (ancho > maxAncho) maxAncho = ancho;
+      totalWeight += (peso || CLOTHING_DEFAULTS.peso) * qty;
+      totalVolume += ((largo || CLOTHING_DEFAULTS.largo) * (ancho || CLOTHING_DEFAULTS.ancho) * (alto || CLOTHING_DEFAULTS.alto)) * qty;
+      if ((largo || CLOTHING_DEFAULTS.largo) > maxLargo) maxLargo = largo || CLOTHING_DEFAULTS.largo;
+      if ((ancho || CLOTHING_DEFAULTS.ancho) > maxAncho) maxAncho = ancho || CLOTHING_DEFAULTS.ancho;
     }
-  }
-
-  if (missingSpecsProducts.length > 0) {
-    const errorMsg = `Para calcular el envío, los siguientes productos requieren especificar peso y dimensiones: ${missingSpecsProducts.join(', ')}`;
-    const err = new Error(errorMsg);
-    err.status = 400;
-    throw err;
   }
 
   // Estimación de altura de la caja apilada a partir del volumen total

@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useGetPacksQuery } from '../../services/packsApi';
-import CategoryPacks from './CategoryPacks';
+import { formatCurrency } from '../../utils/formatCurrency';
 
 const HomePacks = () => {
   const { data: packsData, isLoading } = useGetPacksQuery({ activo: 'true' });
@@ -14,19 +15,6 @@ const HomePacks = () => {
 
   if (isLoading || packs.length === 0) return null;
 
-  const categories = [];
-  const seen = new Set();
-  packs.forEach((pack) => {
-    const cat = pack.categoria;
-    const id = cat?._id || cat;
-    if (!id || seen.has(String(id))) return;
-    seen.add(String(id));
-    categories.push({
-      _id: id,
-      nombre: cat?.nombre || 'Pack',
-    });
-  });
-
   return (
     <section id="packs" className="py-10 scroll-mt-28">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6">
@@ -38,19 +26,40 @@ const HomePacks = () => {
             Packs
           </h2>
           <p className="text-gray-600 mt-2 max-w-xl">
-            Llevá más unidades y pagá menos. Elegí el pack, armá tu combinación y sumalo al carrito.
+            Elegí el pack, armá talle y color de cada prenda y sumalo al carrito.
           </p>
         </div>
       </div>
 
-      <div className="space-y-6">
-        {categories.map((cat) => (
-          <CategoryPacks
-            key={cat._id}
-            categoriaId={cat._id}
-            categoriaNombre={cat.nombre}
-          />
-        ))}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {packs.map((pack) => {
+          const cover = pack.imagen?.url || pack.categoria?.imagen;
+          return (
+            <Link
+              key={pack._id}
+              to={`/packs/${pack._id}`}
+              className="group bg-white rounded-3xl overflow-hidden border border-natural-dark shadow-sm hover:shadow-xl transition-all"
+            >
+              <div className="aspect-[4/5] bg-natural overflow-hidden">
+                {cover ? (
+                  <img src={cover} alt={pack.nombre} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-6xl">📦</div>
+                )}
+              </div>
+              <div className="p-5">
+                <p className="text-[10px] font-black uppercase tracking-widest text-primary-600">
+                  {pack.categoria?.nombre || 'Pack'}
+                </p>
+                <h3 className="font-black text-ink text-lg mt-1 group-hover:text-primary-600">
+                  {pack.nombre || `Pack de ${pack.cantidadUnidades} unidades`}
+                </h3>
+                <p className="text-sm text-gray-500 mt-1">{pack.cantidadUnidades} unidades</p>
+                <p className="text-xl font-black text-primary-600 mt-3">{formatCurrency(pack.precio)}</p>
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </section>
   );

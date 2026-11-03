@@ -19,6 +19,8 @@ const userSchema = new mongoose.Schema(
     favoritos: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
     isActive: { type: Boolean, default: true },
     deletedAt: { type: Date, default: null },
+    passwordResetToken: { type: String, default: null, select: false },
+    passwordResetExpires: { type: Date, default: null, select: false },
   },
   { timestamps: true }
 );

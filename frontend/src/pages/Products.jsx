@@ -6,6 +6,7 @@ import CategoryPacks from '../components/products/CategoryPacks';
 import HomePacks from '../components/products/HomePacks';
 import useInfiniteScroll from '../hooks/useInfiniteScroll';
 import { HiAdjustments, HiX } from 'react-icons/hi';
+import usePageMeta from '../hooks/usePageMeta';
 
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Más recientes' },
@@ -15,13 +16,17 @@ const SORT_OPTIONS = [
 ];
 
 const Products = () => {
+  usePageMeta({ title: 'Productos', description: 'Catálogo Aura Canela. Filtrá por talle, color y categoría.' });
   const [searchParams, setSearchParams] = useSearchParams();
   const categoria = searchParams.get('categoria') || '';
   const search = searchParams.get('search') || '';
+  const talla = searchParams.get('talla') || '';
+  const color = searchParams.get('color') || '';
+  const conStock = searchParams.get('conStock') === '1';
   const sort = SORT_OPTIONS.some((opt) => opt.value === searchParams.get('sort'))
     ? searchParams.get('sort')
     : 'newest';
-  const filterKey = `${categoria}|${search}|${sort}`;
+  const filterKey = `${categoria}|${search}|${sort}|${talla}|${color}|${conStock}`;
 
   const [page, setPage] = useState(1);
   const [pagesMap, setPagesMap] = useState({});
@@ -38,8 +43,11 @@ const Products = () => {
     const args = { page, limit: 12, sort };
     if (categoria) args.categoria = categoria;
     if (search) args.search = search;
+    if (talla) args.talla = talla;
+    if (color) args.color = color;
+    if (conStock) args.conStock = true;
     return args;
-  }, [page, categoria, search, sort]);
+  }, [page, categoria, search, sort, talla, color, conStock]);
 
   const { currentData: data, isFetching, isLoading } = useGetProductsQuery(queryArgs);
   const { data: categories = [] } = useGetCategoriesQuery();
@@ -125,6 +133,57 @@ const Products = () => {
               </div>
             </div>
 
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={conStock}
+                  onChange={(e) => updateFilter('conStock', e.target.checked ? '1' : '')}
+                />
+                Solo con stock
+              </label>
+            </div>
+
+            {(data?.filters?.tallas || []).length > 0 && (
+              <div>
+                <h3 className="font-semibold text-sm mb-3">Talle</h3>
+                <div className="flex flex-wrap gap-1.5">
+                  {(data.filters.tallas).map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => updateFilter('talla', talla === t ? '' : t)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${
+                        talla === t ? 'border-primary-600 bg-primary-50 text-primary-700' : 'border-gray-200'
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {(data?.filters?.colores || []).length > 0 && (
+              <div>
+                <h3 className="font-semibold text-sm mb-3">Color</h3>
+                <div className="flex flex-wrap gap-1.5">
+                  {(data.filters.colores).map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => updateFilter('color', color === c ? '' : c)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${
+                        color === c ? 'border-primary-600 bg-primary-50 text-primary-700' : 'border-gray-200'
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {categories.length > 0 && (
               <div>
                 <h3 className="font-semibold text-sm mb-3">Categoría</h3>
@@ -154,7 +213,7 @@ const Products = () => {
               </div>
             )}
 
-            {(categoria || search || (sort && sort !== 'newest')) && (
+            {(categoria || search || talla || color || conStock || (sort && sort !== 'newest')) && (
               <button
                 type="button"
                 onClick={clearFilters}

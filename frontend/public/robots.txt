@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://aura-canela-e-commerce.onrender.com/api/sitemap.xml

@@ -1,7 +1,8 @@
 import React from 'react';
 import { useGetSiteSettingsQuery } from '../../services/siteSettingsApi';
+import { STORE } from '../../config/storeContact';
 
-const IG_URL = import.meta.env.VITE_INSTAGRAM_URL || 'https://instagram.com';
+const IG_URL = STORE.instagram;
 
 const ScrollingBanner = () => {
   const { data: settings, isLoading } = useGetSiteSettingsQuery();

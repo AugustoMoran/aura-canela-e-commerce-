@@ -22,6 +22,15 @@ const packSchema = new mongoose.Schema(
       required: true,
       min: [0.01, 'El precio debe ser mayor a 0'],
     },
+    descripcion: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    imagen: {
+      url: { type: String, default: '' },
+      publicId: { type: String, default: '' },
+    },
     activo: {
       type: Boolean,
       default: true,

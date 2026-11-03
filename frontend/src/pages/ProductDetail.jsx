@@ -10,6 +10,9 @@ import ProductCard from '../components/products/ProductCard';
 import { HiOutlineHeart, HiHeart, HiOutlineShoppingCart, HiChevronLeft, HiOutlineFilm, HiChevronRight } from 'react-icons/hi';
 import { FaWhatsapp, FaCreditCard } from 'react-icons/fa';
 import { generateWhatsAppLink } from '../utils/generateWhatsAppLink';
+import toast from 'react-hot-toast';
+import { variantStock, usesVariants, sellableStock } from '../utils/productStock';
+import usePageMeta from '../hooks/usePageMeta';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -24,23 +27,43 @@ const ProductDetail = () => {
   const [qty, setQty] = useState(1);
   const [selectedTalla, setSelectedTalla] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
+  const [zoomOpen, setZoomOpen] = useState(false);
+  const [missingVariant, setMissingVariant] = useState(false);
 
   // Scroll to top when component mounts or when product changes
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
 
-  const handleBuyWithMP = () => {
+  const requireVariant = () => {
     const needsTalla = product.tallas?.habilitadas?.length > 0;
     const needsColor = product.colores?.length > 0;
-    
     if ((needsTalla && !selectedTalla) || (needsColor && !selectedColor)) {
-      alert('Por favor selecciona talla y color');
-      return;
+      setMissingVariant(true);
+      toast.error('Elegí talle y color');
+      return false;
     }
+    setMissingVariant(false);
+    return true;
+  };
+
+  const handleBuyWithMP = () => {
+    if (!requireVariant()) return;
     addToCart(product, qty, selectedTalla, selectedColor);
     navigate('/checkout');
   };
+
+  usePageMeta({
+    title: product?.nombre,
+    description: product?.descripcion,
+    image: product?.imagenes?.[0]?.url,
+  });
+
+  const needsTalla = product?.tallas?.habilitadas?.length > 0;
+  const needsColor = product?.colores?.length > 0;
+  const variantReady = (!needsTalla || selectedTalla) && (!needsColor || selectedColor);
+  const availableNow = product ? variantStock(product, selectedTalla, selectedColor) : 0;
+  const totalSellable = product ? sellableStock(product) : 0;
 
   if (isLoading) return (
     <div className="max-w-7xl mx-auto px-4 py-12">
@@ -114,7 +137,8 @@ const ProductDetail = () => {
               <img
                 src={media[selectedImage]?.url}
                 alt={product.nombre}
-                className="w-full h-full object-contain"
+                onClick={() => setZoomOpen(true)}
+                className="w-full h-full object-contain cursor-zoom-in"
               />
             )}
 
@@ -197,8 +221,12 @@ const ProductDetail = () => {
 
           {/* Stock */}
           <div className="mb-6">
-            {product.stock > 0 ? (
-              <span className="badge bg-green-100 text-green-700">✓ En stock ({product.stock} disponibles)</span>
+            {usesVariants(product) && !variantReady && totalSellable > 0 ? (
+              <span className="badge bg-gray-100 text-gray-700">Elegí talle y color para ver stock</span>
+            ) : availableNow > 0 ? (
+              <span className={`badge ${availableNow <= 2 ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-700'}`}>
+                {availableNow <= 2 ? `Últimas ${availableNow} unidades` : `En stock (${availableNow})`}
+              </span>
             ) : (
               <span className="badge bg-primary-100 text-primary-700">Sin stock</span>
             )}
@@ -217,8 +245,10 @@ const ProductDetail = () => {
                     onClick={() => setSelectedTalla(talla)}
                     className={`px-4 py-2 border-2 rounded-lg font-medium transition-all ${
                       selectedTalla === talla
-                        ? 'border-yellow-400 bg-yellow-400 text-gray-900'
-                        : 'border-gray-300 text-gray-600 hover:border-yellow-300'
+                        ? 'border-primary-600 bg-primary-600 text-white'
+                        : missingVariant && !selectedTalla
+                          ? 'border-primary-400 text-primary-700'
+                          : 'border-gray-300 text-gray-600 hover:border-primary-300'
                     }`}
                   >
                     {talla}
@@ -258,7 +288,7 @@ const ProductDetail = () => {
           )}
 
           {/* Quantity + Add to cart */}
-          {product.stock > 0 && (
+          {totalSellable > 0 && (
             <div className="space-y-3">
               <div className="flex items-center gap-4">
                 <label className="text-sm font-semibold text-gray-900">Cantidad:</label>
@@ -269,7 +299,7 @@ const ProductDetail = () => {
                   >-</button>
                   <span className="px-4 py-2 font-medium">{qty}</span>
                   <button
-                    onClick={() => setQty((q) => Math.min(product.stock, q + 1))}
+                    onClick={() => setQty((q) => Math.min(Math.max(1, availableNow || 1), q + 1))}
                     className="px-3 py-2 hover:bg-gray-50 text-lg"
                   >+</button>
                 </div>
@@ -277,11 +307,9 @@ const ProductDetail = () => {
 
               <button
                 onClick={() => {
-                  const needsTalla = product.tallas?.habilitadas?.length > 0;
-                  const needsColor = product.colores?.length > 0;
-                  
-                  if ((needsTalla && !selectedTalla) || (needsColor && !selectedColor)) {
-                    alert('Por favor selecciona talla y color');
+                  if (!requireVariant()) return;
+                  if (availableNow < qty) {
+                    toast.error('No hay suficiente stock de esa combinación');
                     return;
                   }
                   addToCart(product, qty, selectedTalla, selectedColor);
@@ -313,9 +341,8 @@ const ProductDetail = () => {
                     const needsTalla = product.tallas?.habilitadas?.length > 0;
                     const needsColor = product.colores?.length > 0;
                     
-                    if ((needsTalla && !selectedTalla) || (needsColor && !selectedColor)) {
+                    if (!requireVariant()) {
                       e.preventDefault();
-                      alert('Por favor selecciona talla y color');
                     }
                   }}
                   href={(product.tallas?.habilitadas?.length === 0 || selectedTalla) && (product.colores?.length === 0 || selectedColor) ? waLink : '#'}
@@ -343,6 +370,16 @@ const ProductDetail = () => {
             {related.map((p) => <ProductCard key={p._id} product={p} />)}
           </div>
         </section>
+      )}
+
+      {zoomOpen && media[selectedImage]?.type !== 'video' && (
+        <button
+          type="button"
+          className="fixed inset-0 z-[80] bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setZoomOpen(false)}
+        >
+          <img src={media[selectedImage]?.url} alt={product.nombre} className="max-h-full max-w-full object-contain" />
+        </button>
       )}
     </div>
   );

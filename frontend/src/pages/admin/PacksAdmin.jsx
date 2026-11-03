@@ -8,6 +8,7 @@ import {
   useDeletePackMutation,
 } from '../../services/packsApi';
 import { formatCurrency } from '../../utils/formatCurrency';
+import { useUploadImageMutation } from '../../services/cartApi';
 
 const PacksAdmin = () => {
   const { data: packsData, isLoading: loadingPacks } = useGetPacksQuery();
@@ -21,11 +22,14 @@ const PacksAdmin = () => {
   const [editingPack, setEditingPack] = useState(null);
   const [message, setMessage] = useState({ type: '', text: '' });
 
+  const [uploadImage, { isLoading: uploading }] = useUploadImageMutation();
   const [formData, setFormData] = useState({
     nombre: '',
     categoria: '',
     cantidadUnidades: '',
     precio: '',
+    descripcion: '',
+    imagen: { url: '', publicId: '' },
     activo: true,
   });
 
@@ -40,6 +44,8 @@ const PacksAdmin = () => {
         categoria: pack.categoria?._id || pack.categoria || '',
         cantidadUnidades: pack.cantidadUnidades || '',
         precio: pack.precio || '',
+        descripcion: pack.descripcion || '',
+        imagen: pack.imagen || { url: '', publicId: '' },
         activo: pack.activo ?? true,
       });
     } else {
@@ -49,6 +55,8 @@ const PacksAdmin = () => {
         categoria: categories[0]?._id || '',
         cantidadUnidades: '',
         precio: '',
+        descripcion: '',
+        imagen: { url: '', publicId: '' },
         activo: true,
       });
     }
@@ -91,6 +99,8 @@ const PacksAdmin = () => {
         categoria: formData.categoria,
         cantidadUnidades: Number(formData.cantidadUnidades),
         precio: Number(formData.precio),
+        descripcion: formData.descripcion,
+        imagen: formData.imagen,
         activo: formData.activo,
       };
 
@@ -239,7 +249,7 @@ const PacksAdmin = () => {
         {/* Modal Formulario */}
         {showModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-            <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl">
+            <div className="bg-white rounded-lg max-w-lg w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto">
               <h3 className="text-xl font-bold text-gray-800 mb-4">
                 {editingPack ? 'Editar Pack' : 'Nuevo Pack de Categoría'}
               </h3>
@@ -277,6 +287,46 @@ const PacksAdmin = () => {
                     placeholder="Ej: Pack 6 unidades"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                  <textarea
+                    name="descripcion"
+                    value={formData.descripcion}
+                    onChange={handleChange}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Foto del pack</label>
+                  {formData.imagen?.url && (
+                    <img src={formData.imagen.url} alt="" className="w-full h-40 object-cover rounded-lg mb-2" />
+                  )}
+                  <label className="btn-secondary inline-block cursor-pointer">
+                    {uploading ? 'Subiendo...' : 'Subir imagen'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploading}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const fd = new FormData();
+                        fd.append('image', file);
+                        try {
+                          const { url, publicId } = await uploadImage(fd).unwrap();
+                          setFormData((prev) => ({ ...prev, imagen: { url, publicId } }));
+                        } catch {
+                          setMessage({ type: 'error', text: 'No se pudo subir la imagen' });
+                        }
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
                 </div>
 
                 <div>

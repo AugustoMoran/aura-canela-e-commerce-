@@ -12,7 +12,7 @@ const DEFAULTS = {
   descripcion:
     'Hablá con nosotros por WhatsApp y te ayudamos a encontrar exactamente lo que necesitás.',
   ctaTexto: 'Hablar por WhatsApp',
-  whatsappNumero: '5491100000000',
+    whatsappNumero: '5491159354045',
   mensajePrellenado:
     'Hola, estuve viendo la página y me gustaría recibir atención personalizada.',
   imagen: DEFAULT_IMAGE,

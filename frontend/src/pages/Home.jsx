@@ -6,6 +6,7 @@ import HomePacks from '../components/products/HomePacks';
 import { useGetProductsQuery } from '../services/productsApi';
 import { useGetCategoriesQuery } from '../services/productsApi';
 import { HiArrowRight } from 'react-icons/hi';
+import usePageMeta from '../hooks/usePageMeta';
 
 const CategoryCard = ({ category }) => (
   <Link
@@ -34,6 +35,10 @@ const CategoryCard = ({ category }) => (
 );
 
 const Home = () => {
+  usePageMeta({
+    title: 'Inicio',
+    description: 'Packs y prendas de Aura Canela. Armá tu combinación y comprá online.',
+  });
   const { data: featuredData } = useGetProductsQuery({ limit: 8, sort: 'popular' });
   const { data: newData } = useGetProductsQuery({ limit: 8, sort: 'newest' });
   const { data: categories = [] } = useGetCategoriesQuery();
@@ -80,7 +85,7 @@ const Home = () => {
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary-600/10 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-primary-600/20 transition-all duration-700"></div>
             <div className="relative z-10">
               <h2 className="text-3xl sm:text-4xl font-black mb-4 uppercase tracking-tighter">¡Comprá con confianza!</h2>
-              <p className="text-gray-400 text-lg max-w-lg">Los packs son la forma más conveniente de armar tu pedido. Pagá por Mercado Pago, transferencia o en el local.</p>
+              <p className="text-gray-400 text-lg max-w-lg">Los packs son la forma más conveniente de armar tu pedido. Pagá por Mercado Pago o coordiná por WhatsApp.</p>
             </div>
             <Link to="/#packs" className="relative z-10 bg-primary-600 text-white font-black px-10 py-5 rounded-2xl hover:bg-primary-700 transition-all whitespace-nowrap flex-shrink-0 shadow-[0_0_20px_rgba(225,29,138,0.4)] uppercase tracking-widest text-sm">
               Ver packs

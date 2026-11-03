@@ -103,4 +103,22 @@ const getMe = (req, res) => {
   });
 };
 
-module.exports = { register, login, refresh, logout, getMe };
+const forgotPassword = async (req, res, next) => {
+  try {
+    await authService.forgotPassword(req.body.email);
+    res.json({ message: 'Si el email está registrado, vas a recibir un enlace para recuperar la contraseña.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const resetPassword = async (req, res, next) => {
+  try {
+    await authService.resetPassword(req.body.token, req.body.password);
+    res.json({ message: 'Contraseña actualizada. Ya podés iniciar sesión.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { register, login, refresh, logout, getMe, forgotPassword, resetPassword };

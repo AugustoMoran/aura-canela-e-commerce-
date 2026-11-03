@@ -1,19 +1,29 @@
+import { STORE, waMeUrl } from '../config/storeContact';
+import { formatCurrency } from './formatCurrency';
+
 export const generateWhatsAppLink = (items, total, phone) => {
-  const number = phone || import.meta.env.VITE_WHATSAPP_NUMBER || '5491100000000';
-  const itemsList = items
-    .map((i) => {
-      const price = i.producto?.precioOferta || i.producto?.precio || i.precio;
-      let itemText = `• ${i.producto?.nombre || i.nombre} x${i.cantidad}`;
-      if (i.talla) itemText += ` - Talla: ${i.talla}`;
-      if (i.color) itemText += ` - Color: ${i.color}`;
-      itemText += ` = $${(price * i.cantidad).toFixed(2)}`;
-      return itemText;
-    })
-    .join('\n');
+  const lines = (items || []).map((item) => {
+    if (item.isPack) {
+      const packName = item.packInfo?.nombrePack || 'Pack';
+      const inner = (item.packInfo?.productosSeleccionados || [])
+        .map((p) => `  • ${p.cantidad}x ${p.nombre}${p.talla ? ` (${p.talla})` : ''}${p.color ? ` ${p.color}` : ''}`)
+        .join('\n');
+      return `• ${packName}\n${inner}`;
+    }
+    const nombre = item.producto?.nombre || item.nombre || 'Producto';
+    const extra = [item.talla, item.color].filter(Boolean).join(' · ');
+    return `• ${item.cantidad}x ${nombre}${extra ? ` (${extra})` : ''}`;
+  });
 
-  const message = encodeURIComponent(
-    `🛒 *Nuevo pedido desde la tienda*\n\n${itemsList}\n\n*Total: $${total.toFixed(2)}*\n\n¡Quiero finalizar mi compra!`
-  );
+  const message = [
+    `Hola ${STORE.name} 💕`,
+    'Quiero hacer este pedido:',
+    '',
+    ...lines,
+    '',
+    `Total: ${formatCurrency(total || 0)}`,
+  ].join('\n');
 
-  return `https://wa.me/${number}?text=${message}`;
+  if (phone) return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  return waMeUrl(message);
 };

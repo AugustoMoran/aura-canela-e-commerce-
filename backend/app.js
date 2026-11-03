@@ -28,6 +28,8 @@ const shippingRoutes = require('./src/routes/shipping');
 const packRoutes = require('./src/routes/packs');
 const notificationRoutes = require('./src/routes/notifications');
 const testRoutes = require('./src/routes/test');
+const Product = require('./src/models/Product');
+const Pack = require('./src/models/Pack');
 
 const app = express();
 
@@ -110,6 +112,31 @@ app.use('/api/test', testRoutes);
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', env: process.env.NODE_ENV, timestamp: new Date() });
+});
+
+app.get('/api/sitemap.xml', async (req, res) => {
+  try {
+    const front = (process.env.FRONTEND_URL || 'https://aura-canela-e-commerce.vercel.app').replace(/\/+$/, '');
+    const [products, packs] = await Promise.all([
+      Product.find({ isActive: true, deletedAt: null }).select('_id updatedAt').lean(),
+      Pack.find({ activo: true }).select('_id updatedAt').lean(),
+    ]);
+    const urls = [
+      '',
+      '/productos',
+      '/contacto',
+      '/pedido',
+      ...products.map((p) => `/productos/${p._id}`),
+      ...packs.map((p) => `/packs/${p._id}`),
+    ];
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.map((path) => `  <url><loc>${front}${path}</loc></url>`).join('\n')}
+</urlset>`;
+    res.header('Content-Type', 'application/xml').send(xml);
+  } catch (err) {
+    res.status(500).send('sitemap error');
+  }
 });
 
 // 404

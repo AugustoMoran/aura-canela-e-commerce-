@@ -8,7 +8,8 @@ const {
 // Public: create order (guest or logged-in)
 router.post('/', optionalAuth, createOrder);
 
-// Public: track by code
+// Public: track by code + email
+router.post('/track', getOrderByCode);
 router.get('/track/:codigo', getOrderByCode);
 
 // Public: Check MP payment status on return from checkout

@@ -1,12 +1,19 @@
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
+const { variantStock, toPublicProduct } = require('../utils/productStock');
 
 const getCart = async (userId) => {
   const cart = await Cart.findOne({ usuario: userId }).populate({
     path: 'items.producto',
-    select: 'nombre precio precioOferta imagenes stock isActive',
+    select: 'nombre precio precioOferta imagenes stock isActive tallas colores variantes categoria',
   });
-  return cart || { items: [] };
+  if (!cart) return { items: [] };
+  const obj = cart.toObject();
+  obj.items = obj.items.map((item) => ({
+    ...item,
+    producto: item.producto ? toPublicProduct(item.producto) : item.producto,
+  }));
+  return obj;
 };
 
 const syncCart = async (userId, items) => {
@@ -19,9 +26,11 @@ const syncCart = async (userId, items) => {
   for (const item of items) {
     const product = await Product.findOne({ _id: item.producto, isActive: true });
     if (!product) continue;
+    const available = variantStock(product, item.talla, item.color);
+    if (available <= 0) continue;
     cart.items.push({
       producto: item.producto,
-      cantidad: Math.min(item.cantidad, product.stock),
+      cantidad: Math.min(item.cantidad, available),
       talla: item.talla,
       color: item.color,
     });
@@ -74,12 +83,17 @@ const addToCart = async (userId, productoId, cantidad = 1, talla, color, packPay
     (i) => i.producto.toString() === productoId && i.talla === talla && i.color === color
   );
   
+  const available = variantStock(product, talla, color);
+  if (available <= 0) {
+    throw Object.assign(new Error('Sin stock para esa talla y color.'), { statusCode: 400 });
+  }
+
   if (existing) {
-    existing.cantidad = Math.min(existing.cantidad + cantidad, product.stock);
+    existing.cantidad = Math.min(existing.cantidad + cantidad, available);
   } else {
     cart.items.push({ 
       producto: productoId, 
-      cantidad: Math.min(cantidad, product.stock),
+      cantidad: Math.min(cantidad, available),
       talla,
       color
     });

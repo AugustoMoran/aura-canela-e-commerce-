@@ -1,21 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { useGetAllOrdersQuery, useUpdateOrderMutation, useFinalizeOrderMutation, useDeleteOrderMutation } from '../../services/ordersApi';
 import { formatCurrency } from '../../utils/formatCurrency';
 import toast from 'react-hot-toast';
 import { HiOutlineCheckCircle, HiOutlineTrash, HiOutlineChevronDown, HiOutlineChevronUp } from 'react-icons/hi';
 
-const PEDIDO_ESTADOS = [
-  'Pedido recibido',
-  'En preparación',
-  'Preparado',
-  'Listo para despachar',
-  'Despachado',
-  'Cancelado',
-];
-
-const ENVIO_OPTIONS = ['pendiente', 'preparando', 'enviado', 'entregado', 'cancelado'];
+const PEDIDO_ESTADOS = ['Recibido', 'En preparación', 'Enviado', 'Entregado', 'Cancelado'];
 const PAGO_OPTIONS = ['pendiente', 'aprobado', 'rechazado', 'reembolsado'];
 
 const METODO_BADGE = {
@@ -24,10 +14,28 @@ const METODO_BADGE = {
   pendiente: 'bg-gray-100 text-gray-600',
 };
 
+const normalizeEstado = (estado) => {
+  const map = {
+    'Pedido recibido': 'Recibido',
+    Preparado: 'En preparación',
+    'Listo para despachar': 'En preparación',
+    Despachado: 'Enviado',
+  };
+  return map[estado] || estado || 'Recibido';
+};
+
+const clienteNombre = (order) =>
+  order.usuario
+    ? `${order.usuario.nombre} ${order.usuario.apellido}`
+    : `${order.guestData?.nombre || ''} ${order.guestData?.apellido || ''}`.trim() || 'Invitado';
+
+const clienteEmail = (order) => order.usuario?.email || order.guestData?.email || '—';
+const clienteTel = (order) => order.usuario?.telefono || order.guestData?.telefono || '—';
+
 const OrdersAdmin = () => {
-  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [expandedOrderId, setExpandedOrderId] = useState(null);
+  const [trackingDraft, setTrackingDraft] = useState({});
   const { data, isLoading, isFetching } = useGetAllOrdersQuery({ page, limit: 15 });
   const [updateOrder] = useUpdateOrderMutation();
   const [finalizeOrder, { isLoading: finalizing }] = useFinalizeOrderMutation();
@@ -45,59 +53,32 @@ const OrdersAdmin = () => {
 
   const handleFinalize = async (order, force = false) => {
     const isRejectedOrCanceled = ['rechazado', 'cancelado'].includes(order.estadoPago);
-    
-    let confirmMsg;
-    if (isRejectedOrCanceled) {
-      confirmMsg = `¿Finalizar el pedido ${order.codigo} (${order.estadoPago})? El stock no será modificado.`;
-    } else {
-      confirmMsg = force
-        ? `⚠️ El stock es insuficiente. ¿Descontar de todas formas y dejar stock en negativo?`
-        : `¿Descontar el stock del pedido ${order.codigo}? Esta acción no se puede deshacer.`;
-    }
-    
+    const confirmMsg = isRejectedOrCanceled
+      ? `¿Finalizar ${order.codigo} sin tocar stock?`
+      : force
+        ? 'Stock insuficiente. ¿Descontar igual?'
+        : `¿Descontar el stock de ${order.codigo}?`;
     if (!window.confirm(confirmMsg)) return;
     setFinalizingId(order._id);
     try {
-      const result = await finalizeOrder({ id: order._id, force }).unwrap();
-      if (isRejectedOrCanceled) {
-        toast.success(`Pedido ${order.estadoPago} finalizado`);
-      } else if (result.agotados?.length > 0) {
-        const nombres = result.agotados.map((p) => p.nombre).join(', ');
-        toast(
-          (t) => (
-            <span>
-              ⚠️ Sin stock: <strong>{nombres}</strong>.{' '}
-              <button
-                className="underline font-medium"
-                onClick={() => { toast.dismiss(t.id); navigate('/admin/productos?sinStock=1'); }}
-              >
-                Ver productos
-              </button>
-            </span>
-          ),
-          { duration: 8000 }
-        );
-      } else {
-        toast.success('Stock descontado correctamente');
-      }
+      await finalizeOrder({ id: order._id, force }).unwrap();
+      toast.success('Pedido finalizado');
     } catch (err) {
       if (err?.data?.code === 'STOCK_INSUFICIENTE') {
-        toast.error(err.data.message, { duration: 4000 });
-        // Offer force option
         handleFinalize(order, true);
         return;
       }
-      toast.error(err?.data?.message || 'Error al finalizar pedido');
+      toast.error(err?.data?.message || 'Error al finalizar');
     } finally {
       setFinalizingId(null);
     }
   };
 
   const handleDelete = async (order) => {
-    if (!window.confirm(`¿Eliminar el pedido ${order.codigo} del historial? Esta acción no se puede deshacer.`)) return;
+    if (!window.confirm(`¿Eliminar ${order.codigo}?`)) return;
     try {
       await deleteOrder(order._id).unwrap();
-      toast.success('Pedido eliminado del historial');
+      toast.success('Eliminado');
     } catch (err) {
       toast.error(err?.data?.message || 'Error al eliminar');
     }
@@ -105,18 +86,20 @@ const OrdersAdmin = () => {
 
   return (
     <AdminLayout>
-      <h1 className="text-2xl font-bold mb-6">Pedidos</h1>
+      <h1 className="text-2xl font-bold mb-2">Pedidos</h1>
+      <p className="text-sm text-gray-500 mb-6">
+        Un solo flujo: Recibido → En preparación → Enviado → Entregado. El envío lo gestionás vos; acá queda el registro y el cliente recibe el mail al pasar a Enviado o Cancelado.
+      </p>
 
       <div className="card overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b text-left text-gray-500">
-              <th className="px-4 py-3 font-medium">Código</th>
+              <th className="px-4 py-3 font-medium">Pedido</th>
               <th className="px-4 py-3 font-medium">Cliente</th>
               <th className="px-4 py-3 font-medium">Total</th>
-              <th className="px-4 py-3 font-medium">Método</th>
               <th className="px-4 py-3 font-medium">Pago</th>
-              <th className="px-4 py-3 font-medium">Envío</th>
+              <th className="px-4 py-3 font-medium">Estado</th>
               <th className="px-4 py-3 font-medium">Fecha</th>
               <th className="px-4 py-3 font-medium">Acción</th>
             </tr>
@@ -124,7 +107,7 @@ const OrdersAdmin = () => {
           <tbody>
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i}><td colSpan={8} className="px-4 py-4"><div className="h-4 bg-gray-100 rounded animate-pulse" /></td></tr>
+                <tr key={i}><td colSpan={7} className="px-4 py-4"><div className="h-4 bg-gray-100 rounded animate-pulse" /></td></tr>
               ))
             ) : (data?.orders || []).map((order) => (
               <React.Fragment key={order._id}>
@@ -137,143 +120,123 @@ const OrdersAdmin = () => {
                       {expandedOrderId === order._id ? <HiOutlineChevronUp size={16} /> : <HiOutlineChevronDown size={16} />}
                     </button>
                     <span className="font-mono font-bold text-primary-600">{order.codigo}</span>
+                    <span className={`ml-2 text-[10px] px-2 py-0.5 rounded-full font-medium ${METODO_BADGE[order.metodoPago] || METODO_BADGE.pendiente}`}>
+                      {order.metodoPago}
+                    </span>
                   </td>
-                <td className="px-4 py-3 text-gray-600 max-w-[140px] truncate">
-                  {order.usuario ? `${order.usuario.nombre} ${order.usuario.apellido}` : order.guestData?.nombre}
-                </td>
-                <td className="px-4 py-3 font-medium">{formatCurrency(order.total)}</td>
-                <td className="px-4 py-3">
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${METODO_BADGE[order.metodoPago] || METODO_BADGE.pendiente}`}>
-                    {order.metodoPago}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <select
-                    value={order.estadoPago}
-                    onChange={(e) => handleUpdate(order._id, { estadoPago: e.target.value })}
-                    className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white"
-                  >
-                    {PAGO_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-gray-500 block font-bold">Estado Interno:</label>
+                  <td className="px-4 py-3 text-gray-600 max-w-[160px]">
+                    <p className="truncate font-medium">{clienteNombre(order)}</p>
+                    <p className="truncate text-xs text-gray-400">{clienteEmail(order)}</p>
+                  </td>
+                  <td className="px-4 py-3 font-medium">{formatCurrency(order.total)}</td>
+                  <td className="px-4 py-3">
                     <select
-                      value={order.estadoPedido || 'Pedido recibido'}
+                      value={order.estadoPago}
+                      onChange={(e) => handleUpdate(order._id, { estadoPago: e.target.value })}
+                      className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white"
+                    >
+                      {PAGO_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  </td>
+                  <td className="px-4 py-3">
+                    <select
+                      value={normalizeEstado(order.estadoPedido)}
                       onChange={(e) => handleUpdate(order._id, { estadoPedido: e.target.value })}
                       className="text-xs border border-gray-300 rounded-lg px-2 py-1 bg-amber-50 font-semibold"
                     >
-                      {PEDIDO_ESTADOS.map((o) => (
-                        <option key={o} value={o}>
-                          {o}
-                        </option>
-                      ))}
+                      {PEDIDO_ESTADOS.map((o) => <option key={o} value={o}>{o}</option>)}
                     </select>
-
-                    {order.datosEnvio?.trackingNumber && (
-                      <div className="text-[10px] text-gray-600">
-                        <span className="font-bold">Tracking:</span> {order.datosEnvio.trackingNumber}
-                      </div>
-                    )}
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">
-                  {new Date(order.createdAt).toLocaleDateString('es-AR')}
-                </td>
-                <td className="px-4 py-3">
-                  {!order.stockDeducido && ['aprobado', 'rechazado', 'cancelado'].includes(order.estadoPago) && (order.estadoPago !== 'aprobado' || order.estadoEnvio === 'entregado' || order.estadoEnvio === 'enviado') ? (
-                    <button
-                      onClick={() => handleFinalize(order)}
-                      disabled={finalizingId === order._id || finalizing}
-                      className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 whitespace-nowrap"
-                    >
-                      <HiOutlineCheckCircle size={14} />
-                      {finalizingId === order._id ? 'Finalizando...' : 'Finalizar pedido'}
-                    </button>
-                  ) : order.stockDeducido ? (
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-400 flex items-center gap-1">
-                        <HiOutlineCheckCircle size={14} className="text-green-500" /> Finalizado
-                      </span>
+                  </td>
+                  <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">
+                    {new Date(order.createdAt).toLocaleDateString('es-AR')}
+                  </td>
+                  <td className="px-4 py-3">
+                    {!order.stockDeducido && ['aprobado', 'rechazado', 'cancelado'].includes(order.estadoPago) ? (
                       <button
-                        onClick={() => handleDelete(order)}
-                        title="Eliminar del historial"
-                        className="p-1 rounded-lg hover:bg-primary-50 text-primary-400"
+                        onClick={() => handleFinalize(order)}
+                        disabled={finalizingId === order._id || finalizing}
+                        className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
                       >
-                        <HiOutlineTrash size={13} />
+                        <HiOutlineCheckCircle size={14} />
+                        {finalizingId === order._id ? '...' : 'Descontar stock'}
                       </button>
-                    </div>
-                  ) : null}
-                </td>
-              </tr>
-              {expandedOrderId === order._id && (
-                <tr className="bg-gray-50 border-b">
-                  <td colSpan={8} className="px-4 py-4">
-                    <div className="bg-white rounded-lg p-4 border border-gray-200">
-                      <h4 className="font-semibold text-sm mb-3">Detalles del pedido</h4>
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-xs">
-                          <thead>
-                            <tr className="border-b text-gray-600">
-                              <th className="text-left px-2 py-2">Producto</th>
-                              <th className="text-right px-2 py-2">Cantidad</th>
-                              <th className="text-left px-2 py-2">Talla</th>
-                              <th className="text-left px-2 py-2">Color</th>
-                              <th className="text-right px-2 py-2">Precio unit.</th>
-                              <th className="text-right px-2 py-2">Subtotal</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {order.items?.map((item, i) => (
-                              <tr key={i} className="border-b last:border-0 hover:bg-gray-50">
-                                <td className="px-2 py-2">{item.nombre}</td>
-                                <td className="text-right px-2 py-2">{item.cantidad}</td>
-                                <td className="px-2 py-2">
-                                  <span className="text-xs bg-blue-50 px-2 py-1 rounded font-medium">
-                                    {item.talla || '—'}
-                                  </span>
-                                </td>
-                                <td className="px-2 py-2">
-                                  <div className="flex items-center gap-2">
-                                    {item.color && (
-                                      <>
-                                        <div
-                                          className="w-4 h-4 rounded-full border border-gray-300"
-                                          style={{ backgroundColor: item.color.includes('#') ? item.color : '#000' }}
-                                          title={item.color}
-                                        />
-                                        <span className="text-xs">{item.color}</span>
-                                      </>
-                                    )}
-                                  </div>
-                                </td>
-                                <td className="text-right px-2 py-2">{formatCurrency(item.precio)}</td>
-                                <td className="text-right px-2 py-2 font-medium">
-                                  {formatCurrency(item.precio * item.cantidad)}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                    ) : order.stockDeducido ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400">Stock ok</span>
+                        <button onClick={() => handleDelete(order)} className="p-1 rounded-lg hover:bg-primary-50 text-primary-400">
+                          <HiOutlineTrash size={13} />
+                        </button>
                       </div>
-                      <div className="mt-3 p-3 bg-gray-50 rounded text-sm">
-                        <div className="flex justify-between">
-                          <span>Total:</span>
-                          <span className="font-bold text-primary-600">{formatCurrency(order.total)}</span>
-                        </div>
-                      </div>
-                    </div>
+                    ) : null}
                   </td>
                 </tr>
-              )}
-            </React.Fragment>
+                {expandedOrderId === order._id && (
+                  <tr className="bg-gray-50 border-b">
+                    <td colSpan={7} className="px-4 py-4">
+                      <div className="bg-white rounded-lg p-4 border border-gray-200 grid grid-cols-1 lg:grid-cols-3 gap-4">
+                        <div className="lg:col-span-2">
+                          <h4 className="font-semibold text-sm mb-3">Qué pidió</h4>
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr className="border-b text-gray-600">
+                                <th className="text-left py-2">Producto</th>
+                                <th className="text-right">Cant.</th>
+                                <th className="text-left">Talle</th>
+                                <th className="text-left">Color</th>
+                                <th className="text-right">Subtotal</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {order.items?.map((item, i) => (
+                                <tr key={i} className="border-b last:border-0">
+                                  <td className="py-2">{item.nombre}</td>
+                                  <td className="text-right">{item.cantidad}</td>
+                                  <td>{item.talla || '—'}</td>
+                                  <td>{item.color || '—'}</td>
+                                  <td className="text-right font-medium">{formatCurrency(item.precio * item.cantidad)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                        <div className="space-y-3 text-sm">
+                          <h4 className="font-semibold">Cliente y envío</h4>
+                          <p>{clienteNombre(order)}</p>
+                          <p className="text-gray-500">{clienteEmail(order)}</p>
+                          <p className="text-gray-500">{clienteTel(order)}</p>
+                          <p className="text-gray-500">{order.guestData?.direccion || order.datosEnvio?.direccion || 'Sin dirección'}</p>
+                          <div className="rounded-xl bg-natural p-3 text-xs space-y-1">
+                            <p><strong>Cómo lo recibe:</strong> {order.datosEnvio?.servicio || order.datosEnvio?.tipo || '—'}</p>
+                            <p><strong>Costo envío:</strong> {formatCurrency(order.datosEnvio?.costo || 0)}</p>
+                            <p><strong>CP:</strong> {order.datosEnvio?.codigoPostal || '—'}</p>
+                          </div>
+                          <label className="block text-xs font-medium">Código de seguimiento (opcional)</label>
+                          <div className="flex gap-2">
+                            <input
+                              className="input-field text-xs"
+                              placeholder="Andreani / Correo / etc."
+                              value={trackingDraft[order._id] ?? order.datosEnvio?.trackingNumber ?? ''}
+                              onChange={(e) => setTrackingDraft((prev) => ({ ...prev, [order._id]: e.target.value }))}
+                            />
+                            <button
+                              type="button"
+                              className="btn-secondary text-xs whitespace-nowrap"
+                              onClick={() => handleUpdate(order._id, { trackingNumber: trackingDraft[order._id] ?? '' })}
+                            >
+                              Guardar
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
             ))}
           </tbody>
         </table>
       </div>
 
-      {/* Pagination */}
       {data && data.pages > 1 && (
         <div className="flex justify-center gap-2 mt-6">
           {Array.from({ length: data.pages }).map((_, i) => (
@@ -281,7 +244,7 @@ const OrdersAdmin = () => {
               key={i}
               onClick={() => setPage(i + 1)}
               disabled={isFetching}
-              className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
+              className={`w-9 h-9 rounded-lg text-sm font-medium ${
                 page === i + 1 ? 'bg-primary-600 text-white' : 'bg-white border hover:bg-gray-50'
               }`}
             >
@@ -295,4 +258,3 @@ const OrdersAdmin = () => {
 };
 
 export default OrdersAdmin;
-

@@ -21,56 +21,145 @@ class CorreoArgentinoProvider extends BaseShippingProvider {
     super(config);
   }
 
-  // Simulación y llamada a la API Oficial de Correo Argentino
-  async quoteShipping({ originZip, destinationZip, weight, length, width, height }) {
-    const isSandbox = this.config?.ambiente === 'sandbox' || process.env.NODE_ENV !== 'production';
+  estimatedRates({ destinationZip, weight }) {
+    const pesoKg = Math.max(0.5, weight || 1);
+    const zipNum = parseInt(destinationZip, 10) || 1000;
+    const zonaExtra = zipNum >= 1600 && zipNum < 2000 ? 800 : zipNum >= 2000 ? 1800 : 0;
+    return [
+      {
+        servicioCode: 'PAAR_CLASICO',
+        nombre: 'Correo Argentino - Clásico Paq.Ar',
+        costo: Math.round(3500 + pesoKg * 800 + zonaExtra),
+        diasEntregaEstimados: '3 a 6 días hábiles',
+        proveedor: 'correoargentino',
+        fuente: 'estimada',
+      },
+      {
+        servicioCode: 'PAAR_EXPRESO',
+        nombre: 'Correo Argentino - Expreso Paq.Ar',
+        costo: Math.round(5200 + pesoKg * 1100 + zonaExtra),
+        diasEntregaEstimados: '1 a 3 días hábiles',
+        proveedor: 'correoargentino',
+        fuente: 'estimada',
+      },
+    ];
+  }
 
-    // Si faltan credenciales o CP origen en producción
-    const cpOrigen = this.config?.codigoPostalOrigen || '1000';
+  hasCredentials() {
+    return Boolean(this.config?.usuario && this.config?.passwordOrToken);
+  }
 
-    // En ambiente Sandbox o desarrollo, generamos tarifas calculadas según peso y CP
-    // si no hay respuesta viva de la API
-    try {
-      if (isSandbox) {
-        const pesoKg = Math.max(0.5, weight || 1);
-        const baseCostClasico = Math.round(3500 + pesoKg * 800);
-        const baseCostExpreso = Math.round(5200 + pesoKg * 1100);
+  async getAccessToken() {
+    const sandbox = this.config?.ambiente !== 'produccion';
+    const tokenUrl = sandbox
+      ? 'https://apitest.correoargentino.com.ar/token'
+      : 'https://api.correoargentino.com.ar/token';
 
-        return [
-          {
-            servicioCode: 'PAAR_CLASICO',
-            nombre: 'Correo Argentino - Clásico Paq.Ar',
-            costo: baseCostClasico,
-            diasEntregaEstimados: '3 a 6 días hábiles',
-            proveedor: 'correoargentino',
-          },
-          {
-            servicioCode: 'PAAR_EXPRESO',
-            nombre: 'Correo Argentino - Expreso Paq.Ar',
-            costo: baseCostExpreso,
-            diasEntregaEstimados: '1 a 3 días hábiles',
-            proveedor: 'correoargentino',
-          },
-        ];
-      }
+    const body = new URLSearchParams({
+      grant_type: 'client_credentials',
+      client_id: this.config.usuario,
+      client_secret: this.config.passwordOrToken,
+    });
 
-      // TODO: Petición HTTP real a la API de Correo Argentino MiCorreo con JWT Token
-      // Ej: https://api.correoargentino.com.ar/v1/rates
-      const pesoKg = Math.max(0.5, weight || 1);
-      const baseCost = Math.round(4000 + pesoKg * 900);
-      return [
-        {
-          servicioCode: 'PAAR_CLASICO',
-          nombre: 'Correo Argentino - Clásico',
-          costo: baseCost,
-          diasEntregaEstimados: '3 a 5 días hábiles',
-          proveedor: 'correoargentino',
-        }
-      ];
-    } catch (error) {
-      console.error('Error al cotizar con Correo Argentino:', error.message);
-      throw new Error('No se pudo obtener la cotización de Correo Argentino.');
+    const res = await fetch(tokenUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body,
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Auth Correo Argentino ${res.status}: ${text.slice(0, 200)}`);
     }
+
+    const data = await res.json();
+    if (!data.access_token) throw new Error('Correo Argentino no devolvió access_token');
+    return data.access_token;
+  }
+
+  mapApiRates(raw) {
+    const list = Array.isArray(raw) ? raw : raw?.rates || raw?.data || raw?.servicios || [];
+    return list
+      .map((opt, index) => {
+        const costo = Number(opt.price || opt.precio || opt.costo || opt.rate || opt.total);
+        if (!costo || Number.isNaN(costo)) return null;
+        return {
+          servicioCode: String(opt.code || opt.servicioCode || opt.productCode || `CA_${index}`),
+          nombre: opt.name || opt.nombre || opt.productName || `Correo Argentino ${index + 1}`,
+          costo: Math.round(costo),
+          diasEntregaEstimados: opt.deliveryTime || opt.diasEntregaEstimados || opt.plazo || 'A confirmar',
+          proveedor: 'correoargentino',
+          fuente: 'api',
+        };
+      })
+      .filter(Boolean);
+  }
+
+  async quoteFromApi({ originZip, destinationZip, weight, length, width, height }) {
+    const sandbox = this.config?.ambiente !== 'produccion';
+    const base = sandbox
+      ? 'https://apitest.correoargentino.com.ar'
+      : 'https://api.correoargentino.com.ar';
+    const token = await this.getAccessToken();
+    const payload = {
+      origin: { postalCode: originZip },
+      destination: { postalCode: destinationZip },
+      dimensions: {
+        weight: Math.round((weight || 0.5) * 1000),
+        length: Math.round(length || 30),
+        width: Math.round(width || 20),
+        height: Math.round(height || 8),
+      },
+    };
+
+    const endpoints = [`${base}/paqar/v1.1/rates`, `${base}/micorreo/v1/rates`];
+    let lastError = null;
+
+    for (const url of endpoints) {
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          lastError = new Error(`${url} ${res.status}`);
+          continue;
+        }
+        const data = await res.json();
+        const mapped = this.mapApiRates(data);
+        if (mapped.length) return mapped;
+        lastError = new Error('La API no devolvió tarifas');
+      } catch (err) {
+        lastError = err;
+      }
+    }
+
+    throw lastError || new Error('No se pudo cotizar con la API de Correo Argentino');
+  }
+
+  async quoteShipping({ originZip, destinationZip, weight, length, width, height }) {
+    const cpOrigen = originZip || this.config?.codigoPostalOrigen || '1000';
+
+    if (this.hasCredentials()) {
+      try {
+        return await this.quoteFromApi({
+          originZip: cpOrigen,
+          destinationZip,
+          weight,
+          length,
+          width,
+          height,
+        });
+      } catch (error) {
+        console.error('Cotización API Correo Argentino falló, uso estimación:', error.message);
+      }
+    }
+
+    return this.estimatedRates({ destinationZip, weight });
   }
 
   async createShipment(orderData) {

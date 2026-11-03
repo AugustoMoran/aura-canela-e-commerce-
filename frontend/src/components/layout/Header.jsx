@@ -9,11 +9,13 @@ import {
   HiMenu,
   HiChevronDown,
 } from 'react-icons/hi';
+import { FaInstagram, FaWhatsapp, FaTiktok } from 'react-icons/fa';
 import useAuth from '../../hooks/useAuth';
 import useCart from '../../hooks/useCart';
 import { toggleMenu, closeMenu } from '../../features/ui/uiSlice';
 import { useGetCategoriesQuery, useGetProductSuggestionsQuery } from '../../services/productsApi';
 import { useGetSiteSettingsQuery } from '../../services/siteSettingsApi';
+import { STORE, waMeUrl } from '../../config/storeContact';
 
 const Header = () => {
   const dispatch = useDispatch();
@@ -264,6 +266,15 @@ const Header = () => {
         <div className="p-6 bg-natural/20 border-t border-natural text-center">
           <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-4">Seguinos en redes</p>
           <div className="flex justify-center gap-6">
+            <a href={STORE.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-ink hover:text-primary-600">
+              <FaInstagram size={22} />
+            </a>
+            <a href={waMeUrl()} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="text-ink hover:text-green-600">
+              <FaWhatsapp size={22} />
+            </a>
+            <a href={STORE.tiktok} target="_blank" rel="noopener noreferrer" aria-label="TikTok" className="text-ink hover:text-primary-600">
+              <FaTiktok size={22} />
+            </a>
           </div>
         </div>
       </div>

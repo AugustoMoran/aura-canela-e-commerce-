@@ -28,7 +28,7 @@ const NAV_ITEMS = [
   { to: '/admin/categorias', label: 'Categorías', icon: HiOutlineTag },
   { to: '/admin/packs', label: 'Packs Promocionales', icon: HiOutlineArchive },
   { to: '/admin/ordenes', label: 'Pedidos', icon: HiOutlineClipboardList },
-  { to: '/admin/envios', label: 'Envíos (Correo Arg.)', icon: HiOutlineTruck },
+  { to: '/admin/envios', label: 'Cotización Correo', icon: HiOutlineTruck },
   { to: '/admin/notificaciones', label: 'Notificaciones', icon: HiOutlineBell },
   { to: '/admin/cupones', label: 'Cupones', icon: HiOutlineTicket },
   { to: '/admin/cloudinary', label: 'Almacenamiento', icon: HiOutlinePhotograph },

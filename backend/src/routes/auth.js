@@ -5,7 +5,7 @@ const validate = require('../middleware/validate');
 const { authLimiter } = require('../middleware/rateLimiter');
 const { protect } = require('../middleware/auth');
 const {
-  register, login, refresh, logout, getMe,
+  register, login, refresh, logout, getMe, forgotPassword, resetPassword,
 } = require('../controllers/authController');
 
 router.post(
@@ -34,6 +34,23 @@ router.post(
 
 router.post('/refresh', refresh);
 router.post('/logout', logout);
+router.post(
+  '/forgot-password',
+  authLimiter,
+  [body('email').isEmail().normalizeEmail().withMessage('Email inválido')],
+  validate,
+  forgotPassword
+);
+router.post(
+  '/reset-password',
+  authLimiter,
+  [
+    body('token').notEmpty().withMessage('Token requerido'),
+    body('password').isLength({ min: 6 }).withMessage('Contraseña mínimo 6 caracteres'),
+  ],
+  validate,
+  resetPassword
+);
 router.get('/me', protect, getMe);
 
 module.exports = router;

@@ -19,7 +19,20 @@ import toast from 'react-hot-toast';
 import { HiOutlinePlus, HiOutlineTrash, HiOutlinePencil, HiX, HiOutlinePhotograph, HiOutlineSearch, HiOutlineRefresh, HiOutlineFilm } from 'react-icons/hi';
 
 const MAX_IMAGES = 7;
-const TALLAS_DISPONIBLES = ['1', '2', '3', '4', '5', '6', '7', '8'];
+const TALLAS_DISPONIBLES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '1', '2', '3', '4', '5', '6', '7', '8'];
+
+const rebuildVariantes = (tallas, colores, prev) => {
+  const sizes = tallas?.habilitadas?.length ? tallas.habilitadas : [''];
+  const colorNames = (colores || []).filter((c) => c.habilitado !== false).map((c) => c.nombre);
+  const cols = colorNames.length ? colorNames : [''];
+  const map = {};
+  (prev || []).forEach((v) => {
+    map[`${v.talla || ''}::${v.color || ''}`] = Number(v.stock) || 0;
+  });
+  const next = [];
+  sizes.forEach((t) => cols.forEach((c) => next.push({ talla: t, color: c, stock: map[`${t}::${c}`] ?? 0 })));
+  return next;
+};
 
 // Normalizar a strings para consistency (HTML input values son siempre strings)
 const EMPTY = { 
@@ -35,7 +48,9 @@ const EMPTY = {
   ancho: '',
   alto: '',
   tallas: { habilitadas: [], rango: '' },
-  colores: []
+  colores: [],
+  variantes: [],
+  stockAnterior: 0,
 };
 
 const normalizeForm = (formData) => ({
@@ -52,6 +67,8 @@ const normalizeForm = (formData) => ({
   alto: String(formData.alto || ''),
   tallas: formData.tallas || { habilitadas: [], rango: '' },
   colores: formData.colores || [],
+  variantes: formData.variantes || [],
+  stockAnterior: formData.stockAnterior || 0,
 });
 
 const ProductsAdmin = () => {
@@ -137,7 +154,8 @@ const ProductsAdmin = () => {
       const habilitadas = prev.tallas.habilitadas.includes(talla)
         ? prev.tallas.habilitadas.filter((t) => t !== talla)
         : [...prev.tallas.habilitadas, talla];
-      return { ...prev, tallas: { ...prev.tallas, habilitadas } };
+      const tallas = { ...prev.tallas, habilitadas };
+      return { ...prev, tallas, variantes: rebuildVariantes(tallas, prev.colores, prev.variantes) };
     });
   };
 
@@ -150,18 +168,18 @@ const ProductsAdmin = () => {
       toast.error('Máximo 8 colores por producto');
       return;
     }
-    setForm((prev) => ({
-      ...prev,
-      colores: [...prev.colores, { ...nuevoColor }]
-    }));
+    setForm((prev) => {
+      const colores = [...prev.colores, { ...nuevoColor }];
+      return { ...prev, colores, variantes: rebuildVariantes(prev.tallas, colores, prev.variantes) };
+    });
     setNuevoColor({ nombre: '', codigo: '#000000', habilitado: true });
   };
 
   const removerColor = (index) => {
-    setForm((prev) => ({
-      ...prev,
-      colores: prev.colores.filter((_, i) => i !== index)
-    }));
+    setForm((prev) => {
+      const colores = prev.colores.filter((_, i) => i !== index);
+      return { ...prev, colores, variantes: rebuildVariantes(prev.tallas, colores, prev.variantes) };
+    });
   };
 
   const toggleColorHabilitado = (index) => {
@@ -230,6 +248,9 @@ const ProductsAdmin = () => {
         tags: form.tags ? form.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
         tallas: form.tallas,
         colores: form.colores,
+        variantes: (form.tallas.habilitadas.length || form.colores.length)
+          ? rebuildVariantes(form.tallas, form.colores, form.variantes)
+          : [],
       };
 
       let productId = editing;
@@ -279,11 +300,19 @@ const ProductsAdmin = () => {
       descripcion: p.descripcion,
       precio: p.precio,
       precioOferta: p.precioOferta,
-      stock: p.stock,
+      stock: p.needsStockAssignment ? p.stockAnterior : p.stock,
       categoria: p.categoria?._id || p.categoria || '',
       tags: p.tags?.join(', ') || '',
+      peso: p.peso,
+      largo: p.largo,
+      ancho: p.ancho,
+      alto: p.alto,
       tallas: p.tallas || { habilitadas: [], rango: '' },
       colores: p.colores || [],
+      variantes: p.variantes?.length
+        ? p.variantes
+        : rebuildVariantes(p.tallas || { habilitadas: [] }, p.colores || [], []),
+      stockAnterior: p.stockAnterior || 0,
     }));
     setEditing(p._id);
     setEditingProduct(p);
@@ -429,10 +458,12 @@ const ProductsAdmin = () => {
               <label className="block text-sm font-medium mb-1">Precio oferta (opcional)</label>
               <input type="text" inputMode="decimal" value={form.precioOferta} onChange={(e) => { const v = e.target.value; if (v === '' || !isNaN(v)) setForm({ ...form, precioOferta: v }); }} className="input-field" placeholder="0.00" />
             </div>
+            {!(form.tallas.habilitadas.length || form.colores.length) && (
             <div>
               <label className="block text-sm font-medium mb-1">Stock</label>
               <input type="text" inputMode="numeric" value={form.stock} onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setForm({ ...form, stock: v }); }} className="input-field" required placeholder="0" />
             </div>
+            )}
             <div>
               <label className="block text-sm font-medium mb-1">Categoría</label>
               <select value={form.categoria} onChange={(e) => setForm({ ...form, categoria: e.target.value })} className="input-field">
@@ -614,6 +645,63 @@ const ProductsAdmin = () => {
                 </div>
               )}
             </div>
+
+            {(form.tallas.habilitadas.length > 0 || form.colores.length > 0) && (
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium mb-2">Stock por talle y color</label>
+                {Number(form.stockAnterior) > 0 && (form.variantes || []).every((v) => !v.stock) && (
+                  <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3">
+                    Stock anterior (sin asignar): <strong>{form.stockAnterior}</strong>. Completá la grilla con el stock real. Hasta entonces el producto no se vende.
+                  </p>
+                )}
+                <div className="overflow-x-auto border rounded-xl">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="bg-gray-50">
+                        <th className="p-2 text-left">Talle \ Color</th>
+                        {(form.colores.filter((c) => c.habilitado !== false).length ? form.colores.filter((c) => c.habilitado !== false) : [{ nombre: 'Único' }]).map((c) => (
+                          <th key={c.nombre} className="p-2">{c.nombre}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(form.tallas.habilitadas.length ? form.tallas.habilitadas : ['Único']).map((talla) => (
+                        <tr key={talla} className="border-t">
+                          <td className="p-2 font-medium">{talla}</td>
+                          {(form.colores.filter((c) => c.habilitado !== false).length ? form.colores.filter((c) => c.habilitado !== false).map((c) => c.nombre) : ['']).map((color) => {
+                            const cellTalla = talla === 'Único' ? '' : talla;
+                            const cellColor = color === 'Único' ? '' : color;
+                            const variant = (form.variantes || []).find((v) => (v.talla || '') === cellTalla && (v.color || '') === cellColor);
+                            return (
+                              <td key={`${talla}-${color}`} className="p-1">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  className="input-field text-center py-1"
+                                  value={variant?.stock ?? 0}
+                                  onChange={(e) => {
+                                    const stock = Math.max(0, parseInt(e.target.value, 10) || 0);
+                                    setForm((prev) => {
+                                      const variantes = rebuildVariantes(prev.tallas, prev.colores, prev.variantes).map((v) =>
+                                        (v.talla || '') === cellTalla && (v.color || '') === cellColor ? { ...v, stock } : v
+                                      );
+                                      return { ...prev, variantes };
+                                    });
+                                  }}
+                                />
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Total asignado: {(form.variantes || []).reduce((s, v) => s + (Number(v.stock) || 0), 0)} u.
+                </p>
+              </div>
+            )}
 
             {/* Multi-image section */}
             <div className="md:col-span-2">

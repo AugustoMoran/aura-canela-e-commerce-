@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useGetPacksByCategoryQuery } from '../../services/packsApi';
 import { useGetProductsQuery } from '../../services/productsApi';
 import { useAddToCartMutation } from '../../services/cartApi';
@@ -7,10 +7,11 @@ import { addItem, openCart } from '../../features/cart/cartSlice';
 import { selectCurrentUser } from '../../features/auth/authSlice';
 import { formatCurrency } from '../../utils/formatCurrency';
 import toast from 'react-hot-toast';
+import { variantStock, usesVariants } from '../../utils/productStock';
 
 const lineKey = (productId, talla, color) => `${productId}::${talla || ''}::${color || ''}`;
 
-const CategoryPacks = ({ categoriaId, categoriaNombre }) => {
+const CategoryPacks = ({ categoriaId, categoriaNombre, lockPackId }) => {
   const { data: packsData } = useGetPacksByCategoryQuery(categoriaId, { skip: !categoriaId });
   const { data: productsData } = useGetProductsQuery(
     { categoria: categoriaId, limit: 50, sort: 'newest' },
@@ -25,8 +26,14 @@ const CategoryPacks = ({ categoriaId, categoriaNombre }) => {
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [variantByProduct, setVariantByProduct] = useState({});
 
-  const packs = packsData?.data || [];
+  const packs = (packsData?.data || []).filter((pack) => !lockPackId || pack._id === lockPackId);
   const categoryProducts = productsData?.products || [];
+
+  useEffect(() => {
+    if (lockPackId && packs.length && !selectedPack) {
+      setSelectedPack(packs[0]);
+    }
+  }, [lockPackId, packs, selectedPack]);
 
   const currentQuantitySelected = useMemo(
     () => selectedProducts.reduce((sum, item) => sum + item.cantidad, 0),
@@ -62,6 +69,15 @@ const CategoryPacks = ({ categoriaId, categoriaNombre }) => {
   const addOneUnit = (product) => {
     if (!selectedPack) return;
     const { talla, color } = getVariant(product);
+    if (usesVariants(product) && ((product.tallas?.habilitadas?.length && !talla) || (product.colores?.length && !color))) {
+      toast.error('Elegí talle y color');
+      return;
+    }
+    const available = variantStock(product, talla, color);
+    if (available <= 0) {
+      toast.error('Sin stock para esa combinación');
+      return;
+    }
     const key = lineKey(product._id, talla, color);
 
     setSelectedProducts((prev) => {
@@ -72,6 +88,10 @@ const CategoryPacks = ({ categoriaId, categoriaNombre }) => {
         (item) => lineKey(item.producto._id, item.talla, item.color) === key
       );
       if (idx >= 0) {
+        if (prev[idx].cantidad + 1 > available) {
+          toast.error(`Solo hay ${available} de esa combinación`);
+          return prev;
+        }
         return prev.map((item, i) =>
           i === idx ? { ...item, cantidad: item.cantidad + 1 } : item
         );
@@ -145,6 +165,7 @@ const CategoryPacks = ({ categoriaId, categoriaNombre }) => {
 
   return (
     <div className="bg-amber-50/60 border border-amber-200 rounded-2xl p-6 my-8 shadow-sm">
+      {!lockPackId && (
       <div className="flex items-center gap-2 mb-4">
         <span className="text-2xl">📦</span>
         <div>
@@ -154,7 +175,9 @@ const CategoryPacks = ({ categoriaId, categoriaNombre }) => {
           </p>
         </div>
       </div>
+      )}
 
+      {!lockPackId && (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
         {packs.map((pack) => {
           const isSelected = selectedPack?._id === pack._id;
@@ -185,6 +208,7 @@ const CategoryPacks = ({ categoriaId, categoriaNombre }) => {
           );
         })}
       </div>
+      )}
 
       {selectedPack && (
         <div className="bg-white rounded-xl p-5 border border-amber-300 shadow-inner space-y-4">

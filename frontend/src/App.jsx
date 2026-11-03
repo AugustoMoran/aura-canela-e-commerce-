@@ -17,6 +17,11 @@ const OrderConfirmation = lazy(() => import('./pages/OrderConfirmation'));
 const OrderHistory = lazy(() => import('./pages/OrderHistory'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Favorites = lazy(() => import('./pages/Favorites'));
+const Contacto = lazy(() => import('./pages/Contacto'));
+const PackDetail = lazy(() => import('./pages/PackDetail'));
+const TrackOrder = lazy(() => import('./pages/TrackOrder'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Admin pages
@@ -75,12 +80,17 @@ const App = () => (
         <Route path="/" element={<Home />} />
         <Route path="/productos" element={<Products />} />
         <Route path="/productos/:id" element={<ProductDetail />} />
+        <Route path="/packs/:id" element={<PackDetail />} />
+        <Route path="/contacto" element={<Contacto />} />
+        <Route path="/pedido" element={<TrackOrder />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/orden/confirmacion" element={<OrderConfirmation />} />
 
         {/* Auth routes (guests only) */}
         <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
         <Route path="/registro" element={<GuestRoute><Register /></GuestRoute>} />
+        <Route path="/recuperar" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
+        <Route path="/recuperar/:token" element={<GuestRoute><ResetPassword /></GuestRoute>} />
 
         {/* Protected user routes */}
         <Route path="/perfil" element={<ProtectedRoute><Profile /></ProtectedRoute>} />

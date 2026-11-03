@@ -10,8 +10,8 @@ export const ordersApi = baseApi.injectEndpoints({
       query: (params) => ({ url: '/orders/my', params }),
       providesTags: ['Order'],
     }),
-    getOrderByCode: builder.query({
-      query: (codigo) => `/orders/track/${codigo}`,
+    trackOrder: builder.mutation({
+      query: (data) => ({ url: '/orders/track', method: 'POST', body: data }),
     }),
     getAllOrders: builder.query({
       query: (params) => ({ url: '/orders', params }),
@@ -59,7 +59,7 @@ export const ordersApi = baseApi.injectEndpoints({
 export const {
   useCreateOrderMutation,
   useGetMyOrdersQuery,
-  useGetOrderByCodeQuery,
+  useTrackOrderMutation,
   useGetAllOrdersQuery,
   useUpdateOrderMutation,
   useDispatchOrderMutation,

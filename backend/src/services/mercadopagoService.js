@@ -51,9 +51,9 @@ const createPreference = async (order) => {
       items,
       external_reference: order._id.toString(),
       back_urls: {
-        success: `${process.env.FRONTEND_URL}/orden/confirmacion?status=success&order=${order._id}`,
-        failure: `${process.env.FRONTEND_URL}/orden/confirmacion?status=failure&order=${order._id}`,
-        pending: `${process.env.FRONTEND_URL}/orden/confirmacion?status=pending&order=${order._id}`,
+        success: `${process.env.FRONTEND_URL}/orden/confirmacion?status=success&order=${order._id}&codigo=${order.codigo}`,
+        failure: `${process.env.FRONTEND_URL}/orden/confirmacion?status=failure&order=${order._id}&codigo=${order.codigo}`,
+        pending: `${process.env.FRONTEND_URL}/orden/confirmacion?status=pending&order=${order._id}&codigo=${order.codigo}`,
       },
     };
 

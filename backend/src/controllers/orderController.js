@@ -4,7 +4,7 @@ const Order = require('../models/Order');
 
 const createOrder = async (req, res, next) => {
   try {
-    const { guestData, items, cuponCodigo, metodoPago } = req.body;
+    const { guestData, items, cuponCodigo, metodoPago, shipping } = req.body;
     const userId = req.user?._id || null;
 
     console.log('\n╔════════════════════════════════════════╗');
@@ -32,7 +32,7 @@ const createOrder = async (req, res, next) => {
     }
 
     console.log('\n✅ Validation passed, creating order...');
-    const order = await orderService.createOrder({ userId, guestData, items, cuponCodigo, metodoPago });
+    const order = await orderService.createOrder({ userId, guestData, items, cuponCodigo, metodoPago, shipping });
     console.log(`✅ Order created: ${order._id}`);
     console.log(`   Order code: ${order.codigo}`);
     console.log(`   Total: ${order.total}`);
@@ -67,7 +67,9 @@ const getMyOrders = async (req, res, next) => {
 
 const getOrderByCode = async (req, res, next) => {
   try {
-    const order = await orderService.getOrderByCode(req.params.codigo);
+    const codigo = req.body?.codigo || req.params.codigo;
+    const email = req.body?.email || req.query.email;
+    const order = await orderService.getOrderByCode(codigo, email);
     res.json(order);
   } catch (error) {
     next(error);
@@ -86,8 +88,14 @@ const getAllOrders = async (req, res, next) => {
 
 const updateOrder = async (req, res, next) => {
   try {
-    const { estadoPago, estadoEnvio } = req.body;
-    const order = await orderService.updateOrderStatus(req.params.id, estadoPago, estadoEnvio);
+    const order = await orderService.updateOrderStatus(req.params.id, {
+      estadoPago: req.body.estadoPago,
+      estadoEnvio: req.body.estadoEnvio,
+      estadoPedido: req.body.estadoPedido,
+      trackingNumber: req.body.trackingNumber,
+      notasAdmin: req.body.notasAdmin,
+      usuarioNombre: req.user?.nombre || 'Administrador',
+    });
     res.json(order);
   } catch (error) {
     next(error);
@@ -160,7 +168,9 @@ const checkMercadoPagoStatus = async (req, res, next) => {
     // Simply redirect - let webhook handle the payment verification and order update
     // This callback is just for user feedback
     console.log(`🔄 Redirigiendo usuario a confirmación...\n`);
-    res.redirect(`${process.env.FRONTEND_URL}/orden/confirmacion?status=${status}&order=${orderId}`);
+    const order = await Order.findById(orderId).select('codigo');
+    const codigo = order?.codigo ? `&codigo=${order.codigo}` : '';
+    res.redirect(`${process.env.FRONTEND_URL}/orden/confirmacion?status=${status}&order=${orderId}${codigo}`);
 
   } catch (error) {
     console.error('❌ ERROR en checkMercadoPagoStatus:', error.message);

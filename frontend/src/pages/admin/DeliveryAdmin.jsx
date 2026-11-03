@@ -33,7 +33,7 @@ const DeliveryAdmin = () => {
             </div>
             <div>
               <h2 className="font-semibold">Despachar pedido</h2>
-              <p className="text-sm text-gray-500">Ingresá el código del pedido para marcarlo como enviado</p>
+              <p className="text-sm text-gray-500">Atajo: también podés cambiar el estado en Pedidos (Recibido → Enviado). El envío real lo gestionás vos.</p>
             </div>
           </div>
 

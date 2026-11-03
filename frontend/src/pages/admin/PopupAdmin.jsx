@@ -11,7 +11,7 @@ const DEFAULTS = {
   titulo: '¿Buscás atención personalizada?',
   descripcion: 'Hablá con nosotros por WhatsApp y te ayudamos a encontrar exactamente lo que necesitás.',
   ctaTexto: 'Hablar por WhatsApp',
-  whatsappNumero: '5491100000000',
+  whatsappNumero: '5491159354045',
   mensajePrellenado: 'Hola, estuve viendo la página y me gustaría recibir atención personalizada.',
   imagen: '',
   imagenPublicId: '',
@@ -101,7 +101,7 @@ const PopupAdmin = () => {
     }
   };
 
-  const waPreview = `https://wa.me/${form.whatsappNumero || '5491100000000'}?text=${encodeURIComponent(
+  const waPreview = `https://wa.me/${form.whatsappNumero || '5491159354045'}?text=${encodeURIComponent(
     form.mensajePrellenado || ''
   )}`;
 
@@ -291,7 +291,7 @@ const PopupAdmin = () => {
                 type="text"
                 value={form.whatsappNumero}
                 onChange={(e) => set('whatsappNumero', e.target.value.replace(/\D/g, ''))}
-                placeholder="5491100000000"
+                placeholder="5491159354045"
                 className="input-field"
               />
             </div>

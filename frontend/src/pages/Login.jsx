@@ -81,6 +81,11 @@ const Login = () => {
               />
             </div>
 
+            <div className="text-right">
+              <Link to="/recuperar" className="text-xs text-primary-600 hover:underline font-medium">
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
             <button type="submit" disabled={isLoading} className="btn-primary w-full py-3 mt-2">
               {isLoading ? 'Ingresando...' : 'Ingresar'}
             </button>

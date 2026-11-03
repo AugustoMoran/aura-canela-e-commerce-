@@ -43,9 +43,20 @@ const orderSchema = new mongoose.Schema(
     // Estado interno del pedido
     estadoPedido: {
       type: String,
-      enum: ['Pedido recibido', 'En preparación', 'Preparado', 'Listo para despachar', 'Despachado', 'Cancelado'],
-      default: 'Pedido recibido',
+      enum: [
+        'Recibido',
+        'En preparación',
+        'Enviado',
+        'Entregado',
+        'Cancelado',
+        'Pedido recibido',
+        'Preparado',
+        'Listo para despachar',
+        'Despachado',
+      ],
+      default: 'Recibido',
     },
+    notasAdmin: { type: String, default: '' },
     historialEstadoPedido: [
       {
         fecha: { type: Date, default: Date.now },
@@ -55,8 +66,10 @@ const orderSchema = new mongoose.Schema(
     ],
     // Información y seguimiento de envío (Correo Argentino / Logística)
     datosEnvio: {
+      tipo: { type: String, enum: ['correo', 'retiro', 'whatsapp', ''], default: '' },
       proveedor: { type: String, default: 'correoargentino' },
       servicio: { type: String, default: '' },
+      servicioCode: { type: String, default: '' },
       costo: { type: Number, default: 0 },
       trackingNumber: { type: String, default: null },
       codigoPostal: { type: String, default: '' },

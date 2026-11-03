@@ -7,6 +7,7 @@ import { useToggleFavoriteMutation, useGetMeQuery } from '../../services/authApi
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '../../features/auth/authSlice';
 import toast from 'react-hot-toast';
+import { usesVariants, sellableStock } from '../../utils/productStock';
 
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
@@ -27,8 +28,13 @@ const ProductCard = ({ product }) => {
     } catch (_) {}
   };
 
+  const inStock = sellableStock(product) > 0;
+
   const handleAddToCart = (e) => {
     e.preventDefault();
+    if (usesVariants(product)) {
+      return;
+    }
     addToCart(product, 1);
   };
 
@@ -61,7 +67,7 @@ const ProductCard = ({ product }) => {
         </button>
 
         {/* Quick Add Button (Desktop only on hover) */}
-        {product.stock > 0 && (
+        {inStock && !usesVariants(product) && (
           <div className="absolute inset-x-0 bottom-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 hidden md:block">
             <button
               onClick={handleAddToCart}
@@ -73,7 +79,7 @@ const ProductCard = ({ product }) => {
           </div>
         )}
 
-        {product.stock === 0 && (
+        {!inStock && (
           <div className="absolute inset-0 bg-ink/40 backdrop-blur-[2px] flex items-center justify-center">
             <span className="text-white font-black text-xs bg-ink/80 px-4 py-2 rounded-full uppercase tracking-[0.2em]">Agotado</span>
           </div>
@@ -95,12 +101,14 @@ const ProductCard = ({ product }) => {
             <span className="font-black text-xl text-primary-700 tracking-tighter">
               {formatCurrency(displayPrice)}
             </span>
+            {!usesVariants(product) && inStock && (
             <button 
               onClick={handleAddToCart}
               className="md:hidden w-8 h-8 rounded-full bg-natural flex items-center justify-center text-ink hover:bg-primary-600 hover:text-white transition-colors"
             >
               <HiOutlineShoppingCart size={16} />
             </button>
+            )}
           </div>
         </div>
       </div>

@@ -78,9 +78,13 @@ const ShippingAdmin = () => {
   return (
     <AdminLayout title="Configuración > Correo Argentino">
       <div className="max-w-4xl mx-auto bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-          🚚 Configuración de Logística y Envíos (Correo Argentino)
+        <h2 className="text-xl font-bold text-gray-800 mb-2 flex items-center gap-2">
+          🚚 Cotización Correo Argentino
         </h2>
+        <p className="text-sm text-gray-500 mb-6">
+          El checkout usa estas credenciales solo para cotizar. El envío real lo gestionás en Pedidos (estados a mano + tracking).
+          Sin usuario/clave, el cotizador usa una tarifa estimada.
+        </p>
 
         {message.text && (
           <div

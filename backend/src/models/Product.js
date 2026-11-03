@@ -35,6 +35,13 @@ const productSchema = new mongoose.Schema(
       rango: { type: String, default: '' },
     },
     colores: [colorSchema],
+    variantes: [
+      {
+        talla: { type: String, default: '', trim: true },
+        color: { type: String, default: '', trim: true },
+        stock: { type: Number, default: 0, min: 0 },
+      },
+    ],
     
     // Dimensiones y peso para Envíos (Correo Argentino / Logística)
     peso: { type: Number, default: 0, min: 0 }, // En kg

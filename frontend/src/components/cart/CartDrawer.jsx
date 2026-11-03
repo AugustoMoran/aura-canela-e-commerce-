@@ -6,6 +6,46 @@ import { closeCart, selectCartIsOpen } from '../../features/cart/cartSlice';
 import { useSelector } from 'react-redux';
 import useCart from '../../hooks/useCart';
 import { formatCurrency } from '../../utils/formatCurrency';
+import { useGetPacksQuery } from '../../services/packsApi';
+
+const PackUpsell = ({ items, onGo }) => {
+  const { data } = useGetPacksQuery({ activo: 'true' });
+  const packs = (data?.data || []).filter((p) => p.activo !== false);
+  if (!packs.length) return null;
+
+  const counts = {};
+  items.forEach((item) => {
+    if (item.isPack) return;
+    const cat = item.producto?.categoria?._id || item.producto?.categoria;
+    if (!cat) return;
+    counts[String(cat)] = (counts[String(cat)] || 0) + (item.cantidad || 1);
+  });
+
+  const offer = packs
+    .map((pack) => {
+      const catId = String(pack.categoria?._id || pack.categoria);
+      const have = counts[catId] || 0;
+      if (have <= 0 || have >= pack.cantidadUnidades) return null;
+      return { pack, missing: pack.cantidadUnidades - have };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.missing - b.missing)[0];
+
+  if (!offer) return null;
+
+  return (
+    <Link
+      to={`/packs/${offer.pack._id}`}
+      onClick={onGo}
+      className="block mx-5 mb-3 rounded-xl bg-primary-50 border border-primary-100 p-3 text-xs"
+    >
+      <p className="font-bold text-primary-800">
+        Te faltan {offer.missing} para el pack de {offer.pack.cantidadUnidades}
+      </p>
+      <p className="text-primary-600 mt-0.5">Armalo y pagás el precio de pack →</p>
+    </Link>
+  );
+};
 
 const CartDrawer = () => {
   const dispatch = useDispatch();
@@ -142,6 +182,8 @@ const CartDrawer = () => {
             </ul>
           )}
         </div>
+
+        {items.length > 0 && <PackUpsell items={items} onGo={() => dispatch(closeCart())} />}
 
         {/* Footer */}
         {items.length > 0 && (

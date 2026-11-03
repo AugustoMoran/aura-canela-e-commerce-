@@ -1,7 +1,7 @@
 const Pack = require('../models/Pack');
 const Category = require('../models/Category');
 
-const createPack = async ({ categoria, cantidadUnidades, precio, nombre, activo }) => {
+const createPack = async ({ categoria, cantidadUnidades, precio, nombre, activo, descripcion, imagen }) => {
   if (!categoria) throw new Error('Debe especificar una categoría.');
   if (!cantidadUnidades || cantidadUnidades <= 0) {
     throw new Error('La cantidad de unidades debe ser mayor a 0.');
@@ -24,6 +24,8 @@ const createPack = async ({ categoria, cantidadUnidades, precio, nombre, activo 
     categoria,
     cantidadUnidades,
     precio,
+    descripcion: descripcion || '',
+    imagen: imagen || { url: '', publicId: '' },
     activo: activo !== undefined ? activo : true,
   });
 
@@ -48,7 +50,7 @@ const getPacks = async (queryFilters = {}) => {
 };
 
 const getPackById = async (id) => {
-  const pack = await Pack.findById(id).populate('categoria', 'nombre');
+  const pack = await Pack.findById(id).populate('categoria', 'nombre imagen');
   if (!pack) throw new Error('Pack no encontrado.');
   return pack;
 };

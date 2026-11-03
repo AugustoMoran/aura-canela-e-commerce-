@@ -1,6 +1,8 @@
+const crypto = require('crypto');
 const User = require('../models/User');
 const RefreshToken = require('../models/RefreshToken');
 const Cart = require('../models/Cart');
+const { sendPasswordResetEmail } = require('../utils/sendNotifications');
 const {
   generateAccessToken,
   generateRefreshToken,
@@ -69,4 +71,39 @@ const mergeGuestCart = async (userId, guestItems) => {
   await cart.save();
 };
 
-module.exports = { register, login, refreshTokens, logout, mergeGuestCart };
+const forgotPassword = async (email) => {
+  const user = await User.findOne({ email: String(email || '').toLowerCase().trim(), isActive: true });
+  if (!user) return;
+
+  const rawToken = crypto.randomBytes(32).toString('hex');
+  user.passwordResetToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+  user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000);
+  await user.save();
+
+  const front = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/+$/, '');
+  const resetUrl = `${front}/recuperar/${rawToken}`;
+  await sendPasswordResetEmail(user.email, user.nombre, resetUrl);
+};
+
+const resetPassword = async (token, password) => {
+  if (!token || !password || password.length < 6) {
+    throw Object.assign(new Error('La contraseña debe tener al menos 6 caracteres.'), { statusCode: 400 });
+  }
+  const hashed = crypto.createHash('sha256').update(token).digest('hex');
+  const user = await User.findOne({
+    passwordResetToken: hashed,
+    passwordResetExpires: { $gt: new Date() },
+    isActive: true,
+  }).select('+passwordResetToken +passwordResetExpires');
+
+  if (!user) {
+    throw Object.assign(new Error('El enlace expiró o no es válido. Pedí uno nuevo.'), { statusCode: 400 });
+  }
+
+  user.password = password;
+  user.passwordResetToken = null;
+  user.passwordResetExpires = null;
+  await user.save();
+};
+
+module.exports = { register, login, refreshTokens, logout, mergeGuestCart, forgotPassword, resetPassword };

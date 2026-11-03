@@ -13,6 +13,10 @@ export const packsApi = baseApi.injectEndpoints({
       query: (categoriaId) => `/packs/categoria/${categoriaId}`,
       providesTags: ['Packs'],
     }),
+    getPack: builder.query({
+      query: (id) => `/packs/${id}`,
+      providesTags: ['Packs'],
+    }),
     createPack: builder.mutation({
       query: (data) => ({
         url: '/packs',
@@ -42,6 +46,7 @@ export const packsApi = baseApi.injectEndpoints({
 export const {
   useGetPacksQuery,
   useGetPacksByCategoryQuery,
+  useGetPackQuery,
   useCreatePackMutation,
   useUpdatePackMutation,
   useDeletePackMutation,

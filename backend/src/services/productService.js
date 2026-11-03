@@ -2,16 +2,34 @@ const Product = require('../models/Product');
 const Category = require('../models/Category');
 const mongoose = require('mongoose');
 const { cloudinary } = require('../config/cloudinary');
+const { toPublicProduct, syncStockFromVariants } = require('../utils/productStock');
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-const getProducts = async ({ page = 1, limit = 12, categoria, search, sort, sinStock }) => {
+const inStockClause = {
+  $or: [
+    { 'variantes.stock': { $gt: 0 } },
+    {
+      $and: [
+        { $or: [{ variantes: { $exists: false } }, { variantes: { $size: 0 } }] },
+        { $or: [{ 'tallas.habilitadas': { $size: 0 } }, { 'tallas.habilitadas.0': { $exists: false } }] },
+        { $or: [{ colores: { $size: 0 } }, { 'colores.0': { $exists: false } }] },
+        { stock: { $gt: 0 } },
+      ],
+    },
+  ],
+};
+
+const getProducts = async ({ page = 1, limit = 12, categoria, search, sort, sinStock, talla, color, conStock }) => {
   const cleanPage = Math.max(1, parseInt(page, 10) || 1);
   const cleanLimit = Math.max(1, Math.min(parseInt(limit, 10) || 12, 100));
   const cleanCategoria = typeof categoria === 'string' ? categoria.trim() : '';
   const cleanSearch = typeof search === 'string' ? search.trim() : '';
   const cleanSort = typeof sort === 'string' ? sort.trim() : 'newest';
   const cleanSinStock = sinStock === 'true' || sinStock === true;
+  const cleanConStock = conStock === 'true' || conStock === true;
+  const cleanTalla = typeof talla === 'string' ? talla.trim() : '';
+  const cleanColor = typeof color === 'string' ? color.trim() : '';
 
   const query = { isActive: true, deletedAt: null };
 
@@ -37,6 +55,32 @@ const getProducts = async ({ page = 1, limit = 12, categoria, search, sort, sinS
     query.stock = { $lte: 0 };
   }
 
+  if (cleanConStock) {
+    query.$and = (query.$and || []).concat([inStockClause]);
+  }
+
+  if (cleanTalla) {
+    query.$and = (query.$and || []).concat([
+      {
+        $or: [
+          { 'variantes': { $elemMatch: { talla: cleanTalla, stock: { $gt: 0 } } } },
+          { 'tallas.habilitadas': cleanTalla },
+        ],
+      },
+    ]);
+  }
+
+  if (cleanColor) {
+    query.$and = (query.$and || []).concat([
+      {
+        $or: [
+          { 'variantes': { $elemMatch: { color: cleanColor, stock: { $gt: 0 } } } },
+          { 'colores.nombre': cleanColor },
+        ],
+      },
+    ]);
+  }
+
   const sortOptions = {
     newest: { createdAt: -1 },
     oldest: { createdAt: 1 },
@@ -54,28 +98,41 @@ const getProducts = async ({ page = 1, limit = 12, categoria, search, sort, sinS
     .limit(cleanLimit)
     .lean();
 
+  const filterBase = { isActive: true, deletedAt: null };
+  if (query.categoria) filterBase.categoria = query.categoria;
+
+  const [tallaVals, colorVals] = await Promise.all([
+    Product.distinct('tallas.habilitadas', filterBase),
+    Product.distinct('colores.nombre', { ...filterBase, 'colores.habilitado': { $ne: false } }),
+  ]);
+
   return {
-    products,
+    products: products.map(toPublicProduct),
     page: cleanPage,
     pages: Math.max(1, Math.ceil(total / cleanLimit) || 1),
     total,
+    filters: {
+      tallas: (tallaVals || []).filter(Boolean).sort(),
+      colores: (colorVals || []).filter(Boolean).sort(),
+    },
   };
 };
 
 const getProductById = async (id) => {
   const product = await Product.findOne({ _id: id, isActive: true }).populate('categoria', 'nombre');
   if (!product) throw Object.assign(new Error('Producto no encontrado.'), { statusCode: 404 });
-  return product;
+  return toPublicProduct(product);
 };
 
 const getRelatedProducts = async (productId, categoriaId, limit = 4) => {
-  return Product.find({
+  const related = await Product.find({
     _id: { $ne: productId },
     categoria: categoriaId,
     isActive: true,
   })
     .limit(limit)
     .lean();
+  return related.map(toPublicProduct);
 };
 
 const sanitizeProductData = (data) => {
@@ -83,6 +140,14 @@ const sanitizeProductData = (data) => {
   if (!clean.categoria) delete clean.categoria;
   if (!clean.descripcion) clean.descripcion = '';
   if (!clean.precioOferta) clean.precioOferta = null;
+  if (Array.isArray(clean.variantes)) {
+    clean.variantes = clean.variantes.map((v) => ({
+      talla: v.talla || '',
+      color: v.color || '',
+      stock: Math.max(0, Number(v.stock) || 0),
+    }));
+  }
+  syncStockFromVariants(clean);
   return clean;
 };
 
