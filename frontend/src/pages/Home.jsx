@@ -20,16 +20,16 @@ const CategoryCard = ({ category }) => (
         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
       />
     ) : (
-      <div className="w-full h-full bg-ink flex items-center justify-center">
-        <span className="text-natural-500 font-bold text-4xl opacity-20">{category.nombre[0]}</span>
+      <div className="w-full h-full bg-[#F4A7C5] flex items-center justify-center">
+        <span className="text-white font-bold text-4xl opacity-30">{category.nombre[0]}</span>
       </div>
     )}
-    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent group-hover:from-primary-900/90 transition-all" />
+    <div className="absolute inset-0 bg-gradient-to-t from-primary-700/55 via-primary-400/10 to-transparent group-hover:from-primary-700/75 transition-all" />
     <div className="absolute bottom-0 left-0 right-0 p-4 transform translate-y-1 group-hover:translate-y-0 transition-transform">
-      <span className="block font-black text-white text-base sm:text-lg uppercase tracking-wider text-center group-hover:scale-105 transition-transform">
+      <span className="block font-black text-white text-base sm:text-lg uppercase tracking-wider text-center drop-shadow-sm group-hover:scale-105 transition-transform">
         {category.nombre}
       </span>
-      <div className="w-8 h-1 bg-primary-600 mx-auto mt-2 scale-x-0 group-hover:scale-x-100 transition-transform origin-center" />
+      <div className="w-8 h-1 bg-white mx-auto mt-2 scale-x-0 group-hover:scale-x-100 transition-transform origin-center" />
     </div>
   </Link>
 );
