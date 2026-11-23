@@ -18,12 +18,20 @@ const variantStock = (product, talla, color) => {
   // Sin grilla aún: usar stock total legacy (productos viejos siguen vendibles)
   if (!hasVariantGrid(product)) return Number(product?.stock) || 0;
   const match = findVariant(product, talla, color);
-  return match ? Number(match.stock) || 0 : 0;
+  if (match) return Number(match.stock) || 0;
+
+  const gridTotal = product.variantes.reduce((sum, v) => sum + (Number(v.stock) || 0), 0);
+  if (gridTotal === 0 && (Number(product?.stock) || 0) > 0) {
+    return Number(product.stock) || 0;
+  }
+  return 0;
 };
 
 const sellableStock = (product) => {
   if (hasVariantGrid(product)) {
-    return product.variantes.reduce((sum, v) => sum + (Number(v.stock) || 0), 0);
+    const gridTotal = product.variantes.reduce((sum, v) => sum + (Number(v.stock) || 0), 0);
+    if (gridTotal > 0) return gridTotal;
+    return Number(product?.stock) || 0;
   }
   return Number(product?.stock) || 0;
 };
