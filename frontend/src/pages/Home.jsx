@@ -81,11 +81,11 @@ const Home = () => {
 
         {/* Banner CTA */}
         <section className="py-12">
-          <div className="bg-ink rounded-[40px] p-8 sm:p-16 flex flex-col sm:flex-row items-center justify-between gap-10 text-white border-2 border-primary-600 shadow-2xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary-600/10 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-primary-600/20 transition-all duration-700"></div>
+          <div className="bg-[#F4A7C5] rounded-[40px] p-8 sm:p-16 flex flex-col sm:flex-row items-center justify-between gap-10 text-white border-2 border-primary-600/40 shadow-2xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary-600/20 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-primary-600/30 transition-all duration-700"></div>
             <div className="relative z-10">
-              <h2 className="text-3xl sm:text-4xl font-black mb-4 uppercase tracking-tighter">¡Comprá con confianza!</h2>
-              <p className="text-gray-400 text-lg max-w-lg">Los packs son la forma más conveniente de armar tu pedido. Pagá por Mercado Pago o coordiná por WhatsApp.</p>
+              <h2 className="text-3xl sm:text-4xl font-black mb-4 uppercase tracking-tighter drop-shadow-sm">¡Comprá con confianza!</h2>
+              <p className="text-white/90 text-lg max-w-lg">Los packs son la forma más conveniente de armar tu pedido. Pagá por Mercado Pago o coordiná por WhatsApp.</p>
             </div>
             <Link to="/#packs" className="relative z-10 bg-primary-600 text-white font-black px-10 py-5 rounded-2xl hover:bg-primary-700 transition-all whitespace-nowrap flex-shrink-0 shadow-[0_0_20px_rgba(225,29,138,0.4)] uppercase tracking-widest text-sm">
               Ver packs
