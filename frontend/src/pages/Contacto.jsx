@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaInstagram, FaTiktok, FaWhatsapp } from 'react-icons/fa';
-import { HiMail } from 'react-icons/hi';
+import { HiMail, HiLocationMarker } from 'react-icons/hi';
 import { STORE, waMeUrl } from '../config/storeContact';
 import usePageMeta from '../hooks/usePageMeta';
 
@@ -38,7 +38,7 @@ const cards = [
 const Contacto = () => {
   usePageMeta({
     title: 'Contacto',
-    description: 'Escribinos por WhatsApp, Instagram, TikTok o mail. Aura Canela.',
+    description: `Visitános en ${STORE.address}. Escribinos por WhatsApp, Instagram, TikTok o mail.`,
   });
 
   return (
@@ -54,6 +54,26 @@ const Contacto = () => {
           Pedidos, talles y packs: escribinos por la red que más uses. Te respondemos a la brevedad.
         </p>
       </div>
+
+      <a
+        href={STORE.mapsUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group mb-8 flex items-start gap-5 rounded-3xl bg-white border border-natural-dark p-6 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all"
+      >
+        <span className="w-16 h-16 rounded-2xl bg-primary-600 text-white flex items-center justify-center flex-shrink-0 shadow-md group-hover:bg-primary-700 transition-colors">
+          <HiLocationMarker size={28} />
+        </span>
+        <span className="min-w-0 pt-1">
+          <span className="block font-black text-ink uppercase tracking-wide text-lg group-hover:text-primary-600 transition-colors">
+            Nuestro local
+          </span>
+          <span className="block text-sm text-gray-600 mt-1">{STORE.address}</span>
+          <span className="block text-xs font-bold text-primary-600 uppercase tracking-wider mt-2">
+            Ver en Google Maps →
+          </span>
+        </span>
+      </a>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         {cards.map((card) => (

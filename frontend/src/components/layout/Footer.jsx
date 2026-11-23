@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FaInstagram, FaWhatsapp, FaTiktok } from 'react-icons/fa';
-import { HiMail, HiPhone } from 'react-icons/hi';
+import { HiMail, HiPhone, HiLocationMarker } from 'react-icons/hi';
 import { STORE, waMeUrl } from '../../config/storeContact';
 
 const Footer = () => (
@@ -59,6 +59,17 @@ const Footer = () => (
         <div>
           <h3 className="font-black text-primary-600 uppercase text-xs tracking-widest mb-6">Contacto</h3>
           <ul className="space-y-3 text-sm font-bold">
+            <li>
+              <a
+                href={STORE.mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-2 hover:text-primary-600"
+              >
+                <HiLocationMarker size={20} className="text-primary-600 flex-shrink-0 mt-0.5" />
+                <span>{STORE.addressShort}</span>
+              </a>
+            </li>
             <li>
               <a href={`mailto:${STORE.email}`} className="flex items-center gap-2 hover:text-primary-600">
                 <HiMail size={20} className="text-primary-600 flex-shrink-0" />

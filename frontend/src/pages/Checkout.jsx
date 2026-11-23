@@ -8,13 +8,14 @@ import { useQuoteShippingMutation } from '../services/shippingApi';
 import { selectCurrentUser } from '../features/auth/authSlice';
 import { formatCurrency } from '../utils/formatCurrency';
 import { generateWhatsAppLink } from '../utils/generateWhatsAppLink';
+import { STORE } from '../config/storeContact';
 import toast from 'react-hot-toast';
 import { FaWhatsapp, FaCreditCard, FaTruck } from 'react-icons/fa';
 
 const REQUIRED_GUEST_FIELDS = ['nombre', 'apellido', 'email', 'telefono'];
 
 const LOCAL_SHIPPING = [
-  { servicioCode: 'RETIRO', tipo: 'retiro', nombre: 'Retiro coordinado', costo: 0, diasEntregaEstimados: 'Coordinamos día y horario' },
+  { servicioCode: 'RETIRO', tipo: 'retiro', nombre: 'Retiro en el local', costo: 0, diasEntregaEstimados: STORE.addressShort },
   { servicioCode: 'WHATSAPP', tipo: 'whatsapp', nombre: 'Coordinar envío por WhatsApp', costo: 0, diasEntregaEstimados: 'Te escribimos para armar el envío' },
 ];
 

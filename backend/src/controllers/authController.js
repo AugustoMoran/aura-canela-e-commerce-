@@ -12,7 +12,7 @@ const register = async (req, res, next) => {
     setRefreshTokenCookie(res, refreshToken);
 
     // Merge guest cart on register
-    if (req.body.guestCart) {
+    if (req.body.guestCart?.length) {
       await authService.mergeGuestCart(user._id, req.body.guestCart);
     }
 
@@ -42,7 +42,7 @@ const login = async (req, res, next) => {
     setRefreshTokenCookie(res, refreshToken);
 
     // Merge guest cart on login
-    if (req.body.guestCart) {
+    if (req.body.guestCart?.length) {
       await authService.mergeGuestCart(user._id, req.body.guestCart);
     }
 

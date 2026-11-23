@@ -3,7 +3,6 @@ import { useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLoginMutation } from '../services/authApi';
 import { setCredentials } from '../features/auth/authSlice';
-import { useSyncCartMutation } from '../services/cartApi';
 import { clearGuestCart, selectCartItems } from '../features/cart/cartSlice';
 import { useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
@@ -13,7 +12,6 @@ const Login = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', password: '' });
   const [login, { isLoading }] = useLoginMutation();
-  const [syncCart] = useSyncCartMutation();
   const guestItems = useSelector(selectCartItems);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
@@ -21,18 +19,25 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const guestCart = guestItems.map((i) => ({
-        producto: i.producto?._id || i.producto,
-        cantidad: i.cantidad,
-      }));
+      const guestCart = guestItems
+        .map((i) => {
+          if (i.isPack && i.packInfo) {
+            return { isPack: true, cantidad: i.cantidad || 1, packInfo: i.packInfo };
+          }
+          const producto = i.producto?._id || i.producto;
+          if (!producto) return null;
+          return {
+            producto,
+            cantidad: i.cantidad || 1,
+            talla: i.talla || null,
+            color: i.color || null,
+          };
+        })
+        .filter(Boolean);
+
       const result = await login({ ...form, guestCart }).unwrap();
       dispatch(setCredentials({ accessToken: result.accessToken, user: result.user }));
-
-      // Sync guest cart to DB
-      if (guestCart.length > 0) {
-        await syncCart(guestCart).unwrap().catch(() => {});
-        dispatch(clearGuestCart());
-      }
+      dispatch(clearGuestCart());
 
       toast.success(`¡Bienvenido, ${result.user.nombre}!`);
       navigate('/');

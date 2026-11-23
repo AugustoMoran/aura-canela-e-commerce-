@@ -59,13 +59,36 @@ const mergeGuestCart = async (userId, guestItems) => {
   }
 
   for (const guestItem of guestItems) {
+    const cantidad = Math.max(1, Number(guestItem.cantidad) || 1);
+
+    if (guestItem.isPack && guestItem.packInfo) {
+      cart.items.push({
+        isPack: true,
+        cantidad,
+        packInfo: guestItem.packInfo,
+      });
+      continue;
+    }
+
+    const productoId = guestItem.producto?._id || guestItem.producto;
+    if (!productoId) continue;
+
+    const talla = guestItem.talla || null;
+    const color = guestItem.color || null;
+
     const existing = cart.items.find(
-      (i) => i.producto.toString() === guestItem.producto
+      (i) =>
+        !i.isPack &&
+        i.producto &&
+        i.producto.toString() === productoId.toString() &&
+        (i.talla || null) === talla &&
+        (i.color || null) === color
     );
+
     if (existing) {
-      existing.cantidad += guestItem.cantidad;
+      existing.cantidad += cantidad;
     } else {
-      cart.items.push({ producto: guestItem.producto, cantidad: guestItem.cantidad });
+      cart.items.push({ producto: productoId, cantidad, talla, color });
     }
   }
   await cart.save();

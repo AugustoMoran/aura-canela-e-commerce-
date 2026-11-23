@@ -80,7 +80,12 @@ const addToCart = async (userId, productoId, cantidad = 1, talla, color, packPay
 
   // Buscar item con mismo producto, talla y color
   const existing = cart.items.find(
-    (i) => i.producto.toString() === productoId && i.talla === talla && i.color === color
+    (i) =>
+      !i.isPack &&
+      i.producto &&
+      i.producto.toString() === productoId.toString() &&
+      i.talla === talla &&
+      i.color === color
   );
   
   const available = variantStock(product, talla, color);
@@ -111,14 +116,26 @@ const updateCartItem = async (userId, productoId, cantidad, talla, color) => {
   const cart = await Cart.findOne({ usuario: userId });
   if (!cart) throw Object.assign(new Error('Carrito no encontrado.'), { statusCode: 404 });
 
-  const item = cart.items.find((i) => 
-    i.producto.toString() === productoId && i.talla === talla && i.color === color
+  const item = cart.items.find(
+    (i) =>
+      !i.isPack &&
+      i.producto &&
+      i.producto.toString() === productoId.toString() &&
+      i.talla === talla &&
+      i.color === color
   );
   if (!item) throw Object.assign(new Error('Item no encontrado.'), { statusCode: 404 });
 
   if (cantidad <= 0) {
-    cart.items = cart.items.filter((i) => 
-      !(i.producto.toString() === productoId && i.talla === talla && i.color === color)
+    cart.items = cart.items.filter(
+      (i) =>
+        !(
+          !i.isPack &&
+          i.producto &&
+          i.producto.toString() === productoId.toString() &&
+          i.talla === talla &&
+          i.color === color
+        )
     );
   } else {
     item.cantidad = cantidad;
