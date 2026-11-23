@@ -3,7 +3,7 @@ const Product = require('../models/Product');
 const Pack = require('../models/Pack');
 const Coupon = require('../models/Coupon');
 const generateOrderCode = require('../utils/generateOrderCode');
-const { variantStock, findVariant, usesVariants } = require('../utils/productStock');
+const { variantStock, findVariant, hasVariantGrid } = require('../utils/productStock');
 const {
   sendOrderConfirmationToUser,
   sendOrderNotificationToAdmin,
@@ -374,7 +374,7 @@ const finalizeOrder = async (id, force = false) => {
       throw err;
     }
 
-    if (usesVariants(product)) {
+    if (hasVariantGrid(product)) {
       const variant = findVariant(product, item.talla, item.color);
       if (variant) {
         variant.stock = force ? variant.stock - item.cantidad : Math.max(0, variant.stock - item.cantidad);

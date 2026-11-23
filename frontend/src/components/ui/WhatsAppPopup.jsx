@@ -2,17 +2,23 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FaWhatsapp } from 'react-icons/fa';
 import { HiX, HiSparkles } from 'react-icons/hi';
 import { useGetPopupConfigQuery } from '../../services/popupApi';
+import { STORE, normalizeWhatsApp } from '../../config/storeContact';
 
 // Imagen default: shopping premium (Unsplash, libre de derechos)
 const DEFAULT_IMAGE =
   'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=600&q=80';
+
+const isPlaceholderWhatsApp = (value) => {
+  const digits = String(value || '').replace(/\D/g, '');
+  return !digits || /0{5,}/.test(digits) || digits.endsWith('0000000');
+};
 
 const DEFAULTS = {
   titulo: '¿Buscás atención personalizada?',
   descripcion:
     'Hablá con nosotros por WhatsApp y te ayudamos a encontrar exactamente lo que necesitás.',
   ctaTexto: 'Hablar por WhatsApp',
-    whatsappNumero: '5491159354045',
+  whatsappNumero: STORE.whatsapp,
   mensajePrellenado:
     'Hola, estuve viendo la página y me gustaría recibir atención personalizada.',
   imagen: DEFAULT_IMAGE,
@@ -34,7 +40,11 @@ const WhatsAppPopup = () => {
     titulo: rawConfig?.titulo?.trim() || DEFAULTS.titulo,
     descripcion: rawConfig?.descripcion?.trim() || DEFAULTS.descripcion,
     ctaTexto: rawConfig?.ctaTexto?.trim() || DEFAULTS.ctaTexto,
-    whatsappNumero: rawConfig?.whatsappNumero?.trim() || DEFAULTS.whatsappNumero,
+    whatsappNumero: normalizeWhatsApp(
+      !isPlaceholderWhatsApp(rawConfig?.whatsappNumero)
+        ? rawConfig.whatsappNumero
+        : STORE.whatsapp
+    ),
     mensajePrellenado: rawConfig?.mensajePrellenado?.trim() || DEFAULTS.mensajePrellenado,
     imagen: rawConfig?.imagen?.trim() || DEFAULTS.imagen,
     tiempoAparicion:

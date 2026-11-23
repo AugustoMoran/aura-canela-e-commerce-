@@ -9,7 +9,7 @@ const popupConfigSchema = new mongoose.Schema(
       default: 'Hablá con nosotros por WhatsApp y te ayudamos a encontrar exactamente lo que necesitás.',
     },
     ctaTexto: { type: String, default: 'Hablar por WhatsApp' },
-    whatsappNumero: { type: String, default: '5491100000000' },
+    whatsappNumero: { type: String, default: '5491159354045' },
     mensajePrellenado: {
       type: String,
       default: 'Hola, estuve viendo la página y me gustaría recibir atención personalizada.',

@@ -248,9 +248,14 @@ const ProductsAdmin = () => {
         tags: form.tags ? form.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
         tallas: form.tallas,
         colores: form.colores,
-        variantes: (form.tallas.habilitadas.length || form.colores.length)
-          ? rebuildVariantes(form.tallas, form.colores, form.variantes)
-          : [],
+        variantes: (() => {
+          if (!(form.tallas.habilitadas.length || form.colores.length)) return [];
+          const rebuilt = rebuildVariantes(form.tallas, form.colores, form.variantes);
+          const hasAssigned = rebuilt.some((v) => (Number(v.stock) || 0) > 0);
+          const alreadyHadGrid = Boolean(editingProduct?.variantes?.length);
+          // No crear grilla en 0 si todavía usan stock total (evita borrar el stock al guardar)
+          return hasAssigned || alreadyHadGrid ? rebuilt : [];
+        })(),
       };
 
       let productId = editing;
@@ -332,11 +337,22 @@ const ProductsAdmin = () => {
     } catch { toast.error('Error'); }
   };
 
+  const hasRealVariantStock = (p) =>
+    (p.variantes || []).some((v) => (Number(v.stock) || 0) > 0);
+
   const handleRestock = async (p) => {
     const qty = parseInt(restockQty, 10);
     if (!qty || qty <= 0) { toast.error('Ingresá una cantidad válida'); return; }
+    if (hasRealVariantStock(p)) {
+      toast.error('Este producto tiene stock por talle/color. Editá el producto para actualizarlo.');
+      setRestockId(null);
+      setRestockQty('');
+      handleEdit(p);
+      return;
+    }
     try {
-      await updateProduct({ id: p._id, stock: qty }).unwrap();
+      // Si quedó una grilla vacía (todo en 0), la limpiamos para que el stock total vuelva a valer
+      await updateProduct({ id: p._id, stock: qty, variantes: [] }).unwrap();
       toast.success(`Stock actualizado a ${qty}`);
       setRestockId(null);
       setRestockQty('');
@@ -651,7 +667,7 @@ const ProductsAdmin = () => {
                 <label className="block text-sm font-medium mb-2">Stock por talle y color</label>
                 {Number(form.stockAnterior) > 0 && (form.variantes || []).every((v) => !v.stock) && (
                   <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3">
-                    Stock anterior (sin asignar): <strong>{form.stockAnterior}</strong>. Completá la grilla con el stock real. Hasta entonces el producto no se vende.
+                    Stock total actual: <strong>{form.stockAnterior}</strong>. Si completás la grilla por talle/color, ese total se reemplaza por la suma de la grilla. Si la dejás en 0, se sigue usando el stock total.
                   </p>
                 )}
                 <div className="overflow-x-auto border rounded-xl">
@@ -862,10 +878,23 @@ const ProductsAdmin = () => {
                       <span className={`badge text-xs ${p.stock > 5 ? 'bg-green-100 text-green-700' : p.stock > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-primary-100 text-primary-600'}`}>
                         {p.stock}
                       </span>
+                      {p.needsStockAssignment && (
+                        <span className="text-[10px] text-amber-600 font-medium" title="Podés asignar stock por talle/color al editar">
+                          total
+                        </span>
+                      )}
                       {p.stock <= 5 && (
                         <button
-                          onClick={() => { setRestockId(p._id); setRestockQty(''); }}
-                          title="Reponer stock"
+                          onClick={() => {
+                            if (hasRealVariantStock(p)) {
+                              handleEdit(p);
+                              toast('Editá el stock por talle/color en la grilla');
+                              return;
+                            }
+                            setRestockId(p._id);
+                            setRestockQty('');
+                          }}
+                          title={hasRealVariantStock(p) ? 'Editar stock por talle/color' : 'Reponer stock'}
                           className="p-1 rounded-lg hover:bg-orange-50 text-orange-400"
                         >
                           <HiOutlineRefresh size={13} />

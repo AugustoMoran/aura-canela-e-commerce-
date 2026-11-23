@@ -157,9 +157,18 @@ const createProduct = async (data) => {
 };
 
 const updateProduct = async (id, data) => {
-  const product = await Product.findByIdAndUpdate(id, sanitizeProductData(data), { new: true, runValidators: true });
+  const clean = sanitizeProductData(data);
+  // Restock solo con stock total: si había grilla vacía (todo 0), limpiarla
+  if (
+    clean.stock != null &&
+    Array.isArray(clean.variantes) &&
+    clean.variantes.length === 0
+  ) {
+    clean.variantes = [];
+  }
+  const product = await Product.findByIdAndUpdate(id, clean, { new: true, runValidators: true });
   if (!product) throw Object.assign(new Error('Producto no encontrado.'), { statusCode: 404 });
-  return product;
+  return toPublicProduct(product);
 };
 
 const deleteProduct = async (id) => {

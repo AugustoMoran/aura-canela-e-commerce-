@@ -1,8 +1,22 @@
 const trimEnv = (value) => (typeof value === 'string' ? value.trim() : '');
 
+/** Normaliza a formato wa.me (Argentina): 549 + área + número */
+export const normalizeWhatsApp = (raw) => {
+  const digits = String(raw || '').replace(/\D/g, '');
+  if (!digits) return '5491159354045';
+  if (digits.startsWith('54')) return digits;
+  if (digits.length === 10 && digits.startsWith('11')) return `549${digits}`;
+  if (digits.length === 11 && digits.startsWith('911')) return `54${digits}`;
+  return digits;
+};
+
+const WHATSAPP_DEFAULT = '5491159354045';
+
 export const STORE = {
   name: trimEnv(import.meta.env.VITE_STORE_NAME) || 'Aura Canela',
-  whatsapp: trimEnv(import.meta.env.VITE_WHATSAPP_NUMBER) || '5491159354045',
+  whatsapp: normalizeWhatsApp(
+    trimEnv(import.meta.env.VITE_WHATSAPP_NUMBER) || WHATSAPP_DEFAULT
+  ),
   instagram:
     trimEnv(import.meta.env.VITE_INSTAGRAM_URL) || 'https://www.instagram.com/auracanela.moda/',
   tiktok:

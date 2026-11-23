@@ -5,13 +5,14 @@ import { useUploadImageMutation } from '../../services/cartApi';
 import toast from 'react-hot-toast';
 import { HiOutlinePhotograph, HiOutlineSave, HiOutlineRefresh, HiOutlineFilm, HiX } from 'react-icons/hi';
 import { FaWhatsapp } from 'react-icons/fa';
+import { normalizeWhatsApp } from '../../config/storeContact';
 
 const DEFAULTS = {
   activo: true,
   titulo: '¿Buscás atención personalizada?',
   descripcion: 'Hablá con nosotros por WhatsApp y te ayudamos a encontrar exactamente lo que necesitás.',
   ctaTexto: 'Hablar por WhatsApp',
-  whatsappNumero: '5491159354045',
+  whatsappNumero: '1159354045',
   mensajePrellenado: 'Hola, estuve viendo la página y me gustaría recibir atención personalizada.',
   imagen: '',
   imagenPublicId: '',
@@ -101,7 +102,7 @@ const PopupAdmin = () => {
     }
   };
 
-  const waPreview = `https://wa.me/${form.whatsappNumero || '5491159354045'}?text=${encodeURIComponent(
+  const waPreview = `https://wa.me/${normalizeWhatsApp(form.whatsappNumero || '1159354045')}?text=${encodeURIComponent(
     form.mensajePrellenado || ''
   )}`;
 
@@ -291,7 +292,7 @@ const PopupAdmin = () => {
                 type="text"
                 value={form.whatsappNumero}
                 onChange={(e) => set('whatsappNumero', e.target.value.replace(/\D/g, ''))}
-                placeholder="5491159354045"
+                placeholder="1159354045"
                 className="input-field"
               />
             </div>
