@@ -33,6 +33,11 @@ const useCart = () => {
   const [clearCartApi] = useClearCartMutation();
 
   const handleAddToCart = async (producto, cantidad = 1, talla, color) => {
+    // Venta solo por pack: no se agregan unidades sueltas
+    if (!producto?.isPack && !producto?.packInfo) {
+      toast.error('Los productos solo se venden por pack');
+      return;
+    }
     if (user) {
       try {
         const result = await addToCartApi({ productoId: producto._id, cantidad, talla, color }).unwrap();

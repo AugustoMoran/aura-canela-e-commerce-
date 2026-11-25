@@ -59,37 +59,15 @@ const mergeGuestCart = async (userId, guestItems) => {
   }
 
   for (const guestItem of guestItems) {
+    // Solo packs: la venta unitaria está deshabilitada
+    if (!guestItem.isPack || !guestItem.packInfo) continue;
+
     const cantidad = Math.max(1, Number(guestItem.cantidad) || 1);
-
-    if (guestItem.isPack && guestItem.packInfo) {
-      cart.items.push({
-        isPack: true,
-        cantidad,
-        packInfo: guestItem.packInfo,
-      });
-      continue;
-    }
-
-    const productoId = guestItem.producto?._id || guestItem.producto;
-    if (!productoId) continue;
-
-    const talla = guestItem.talla || null;
-    const color = guestItem.color || null;
-
-    const existing = cart.items.find(
-      (i) =>
-        !i.isPack &&
-        i.producto &&
-        i.producto.toString() === productoId.toString() &&
-        (i.talla || null) === talla &&
-        (i.color || null) === color
-    );
-
-    if (existing) {
-      existing.cantidad += cantidad;
-    } else {
-      cart.items.push({ producto: productoId, cantidad, talla, color });
-    }
+    cart.items.push({
+      isPack: true,
+      cantidad,
+      packInfo: guestItem.packInfo,
+    });
   }
   await cart.save();
 };

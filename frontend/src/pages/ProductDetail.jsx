@@ -1,57 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useGetProductQuery, useGetRelatedProductsQuery } from '../services/productsApi';
 import { useToggleFavoriteMutation, useGetMeQuery } from '../services/authApi';
-import { formatCurrency } from '../utils/formatCurrency';
-import useCart from '../hooks/useCart';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '../features/auth/authSlice';
 import ProductCard from '../components/products/ProductCard';
-import { HiOutlineHeart, HiHeart, HiOutlineShoppingCart, HiChevronLeft, HiOutlineFilm, HiChevronRight } from 'react-icons/hi';
-import { FaWhatsapp, FaCreditCard } from 'react-icons/fa';
-import { generateWhatsAppLink } from '../utils/generateWhatsAppLink';
-import toast from 'react-hot-toast';
-import { variantStock, usesVariants, sellableStock } from '../utils/productStock';
+import { HiOutlineHeart, HiHeart, HiChevronLeft, HiOutlineFilm, HiChevronRight } from 'react-icons/hi';
+import { FaWhatsapp } from 'react-icons/fa';
+import { STORE, waMeUrl } from '../config/storeContact';
+import { sellableStock } from '../utils/productStock';
 import usePageMeta from '../hooks/usePageMeta';
 
 const ProductDetail = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const { addToCart } = useCart();
   const user = useSelector(selectCurrentUser);
   const { data: product, isLoading, error } = useGetProductQuery(id);
   const { data: related = [] } = useGetRelatedProductsQuery(id, { skip: !product });
   const { data: me } = useGetMeQuery(undefined, { skip: !user });
   const [toggleFavorite] = useToggleFavoriteMutation();
   const [selectedImage, setSelectedImage] = useState(0);
-  const [qty, setQty] = useState(1);
-  const [selectedTalla, setSelectedTalla] = useState(null);
-  const [selectedColor, setSelectedColor] = useState(null);
   const [zoomOpen, setZoomOpen] = useState(false);
-  const [missingVariant, setMissingVariant] = useState(false);
 
-  // Scroll to top when component mounts or when product changes
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
-
-  const requireVariant = () => {
-    const needsTalla = product.tallas?.habilitadas?.length > 0;
-    const needsColor = product.colores?.length > 0;
-    if ((needsTalla && !selectedTalla) || (needsColor && !selectedColor)) {
-      setMissingVariant(true);
-      toast.error('Elegí talle y color');
-      return false;
-    }
-    setMissingVariant(false);
-    return true;
-  };
-
-  const handleBuyWithMP = () => {
-    if (!requireVariant()) return;
-    addToCart(product, qty, selectedTalla, selectedColor);
-    navigate('/checkout');
-  };
 
   usePageMeta({
     title: product?.nombre,
@@ -59,11 +31,9 @@ const ProductDetail = () => {
     image: product?.imagenes?.[0]?.url,
   });
 
-  const needsTalla = product?.tallas?.habilitadas?.length > 0;
-  const needsColor = product?.colores?.length > 0;
-  const variantReady = (!needsTalla || selectedTalla) && (!needsColor || selectedColor);
-  const availableNow = product ? variantStock(product, selectedTalla, selectedColor) : 0;
   const totalSellable = product ? sellableStock(product) : 0;
+  const categoriaId = product?.categoria?._id || product?.categoria;
+  const packsHref = categoriaId ? `/productos?categoria=${categoriaId}` : '/productos';
 
   if (isLoading) return (
     <div className="max-w-7xl mx-auto px-4 py-12">
@@ -86,29 +56,24 @@ const ProductDetail = () => {
   );
 
   const isFavorite = me?.favoritos?.includes(product._id);
-  const displayPrice = product.precioOferta || product.precio;
-  const hasDiscount = product.precioOferta && product.precioOferta < product.precio;
-  
-  // Combinar imágenes y videos en un carrusel
+
   const media = [];
   if (product.imagenes?.length) {
-    product.imagenes.forEach(img => media.push({ type: 'image', ...img }));
+    product.imagenes.forEach((img) => media.push({ type: 'image', ...img }));
   }
   if (product.videos?.length) {
-    product.videos.forEach(vid => media.push({ type: 'video', ...vid }));
+    product.videos.forEach((vid) => media.push({ type: 'video', ...vid }));
   }
   if (media.length === 0) {
     media.push({ type: 'image', url: 'https://via.placeholder.com/600x600?text=Sin+imagen' });
   }
 
-  const waLink = generateWhatsAppLink(
-    [{ producto: product, cantidad: qty, talla: selectedTalla, color: selectedColor }],
-    displayPrice * qty
+  const waLink = waMeUrl(
+    `Hola ${STORE.name} 💕\nQuiero consultar por: ${product.nombre}`
   );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
         <Link to="/productos" className="flex items-center gap-1 hover:text-primary-600">
           <HiChevronLeft size={16} /> Productos
@@ -120,7 +85,6 @@ const ProductDetail = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-16">
-        {/* Media Carousel */}
         <div>
           <div className="rounded-2xl overflow-hidden bg-white mb-3 relative group aspect-square">
             {media[selectedImage]?.type === 'video' ? (
@@ -142,7 +106,6 @@ const ProductDetail = () => {
               />
             )}
 
-            {/* Botones de navegación */}
             {media.length > 1 && (
               <>
                 <button
@@ -157,8 +120,6 @@ const ProductDetail = () => {
                 >
                   <HiChevronRight size={24} />
                 </button>
-
-                {/* Contador */}
                 <div className="absolute bottom-4 right-4 bg-black/60 text-white px-3 py-1 rounded-full text-sm font-medium">
                   {selectedImage + 1} / {media.length}
                 </div>
@@ -191,7 +152,6 @@ const ProductDetail = () => {
           )}
         </div>
 
-        {/* Info */}
         <div className="flex flex-col">
           <div className="flex items-start justify-between gap-2 mb-1">
             <p className="text-sm text-gray-400">{product.categoria?.nombre}</p>
@@ -205,164 +165,76 @@ const ProductDetail = () => {
 
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">{product.nombre}</h1>
 
-          <div className="flex items-baseline gap-3 mb-4">
-            <span className="text-3xl font-extrabold text-gray-900">{formatCurrency(displayPrice)}</span>
-            {hasDiscount && (
-              <>
-                <span className="text-lg text-gray-400 line-through">{formatCurrency(product.precio)}</span>
-                <span className="badge bg-primary-100 text-primary-700 font-bold">
-                  -{Math.round(((product.precio - product.precioOferta) / product.precio) * 100)}%
-                </span>
-              </>
-            )}
-          </div>
-
           <p className="text-gray-600 leading-relaxed mb-6">{product.descripcion}</p>
 
-          {/* Stock */}
           <div className="mb-6">
-            {usesVariants(product) && !variantReady && totalSellable > 0 ? (
-              <span className="badge bg-gray-100 text-gray-700">Elegí talle y color para ver stock</span>
-            ) : availableNow > 0 ? (
-              <span className={`badge ${availableNow <= 2 ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-700'}`}>
-                {availableNow <= 2 ? `Últimas ${availableNow} unidades` : `En stock (${availableNow})`}
+            {totalSellable > 0 ? (
+              <span className={`badge ${totalSellable <= 2 ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-700'}`}>
+                {totalSellable <= 2 ? `Últimas ${totalSellable} unidades` : `En stock (${totalSellable})`}
               </span>
             ) : (
               <span className="badge bg-primary-100 text-primary-700">Sin stock</span>
             )}
           </div>
 
-          {/* Tallas - Solo si el producto tiene tallas */}
           {product.tallas?.habilitadas?.length > 0 && (
             <div className="mb-6">
               <label className="block text-sm font-semibold text-gray-900 mb-2">
-                Talla {product.tallas?.rango && `(${product.tallas.rango})`}
+                Tallas disponibles {product.tallas?.rango && `(${product.tallas.rango})`}
               </label>
               <div className="flex gap-2 flex-wrap">
-                {product.tallas?.habilitadas?.map((talla) => (
-                  <button
+                {product.tallas.habilitadas.map((talla) => (
+                  <span
                     key={talla}
-                    onClick={() => setSelectedTalla(talla)}
-                    className={`px-4 py-2 border-2 rounded-lg font-medium transition-all ${
-                      selectedTalla === talla
-                        ? 'border-primary-600 bg-primary-600 text-white'
-                        : missingVariant && !selectedTalla
-                          ? 'border-primary-400 text-primary-700'
-                          : 'border-gray-300 text-gray-600 hover:border-primary-300'
-                    }`}
+                    className="px-4 py-2 border-2 border-gray-200 rounded-lg font-medium text-gray-700"
                   >
                     {talla}
-                  </button>
+                  </span>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Colores - Solo si el producto tiene colores */}
           {product.colores?.length > 0 && (
             <div className="mb-6">
               <label className="block text-sm font-semibold text-gray-900 mb-2">
-                Color {product.colores?.length > 0 && `(${product.colores.length})`}
+                Colores disponibles
               </label>
               <div className="flex gap-3 flex-wrap">
-                {product.colores?.map((color) => (
-                  <button
+                {product.colores.map((color) => (
+                  <div
                     key={color.codigo}
-                    onClick={() => setSelectedColor(color.nombre)}
-                    disabled={!color.habilitado}
-                    className={`relative w-12 h-12 rounded-lg border-2 transition-all ${
-                      selectedColor === color.nombre
-                        ? 'border-gray-900 ring-2 ring-offset-2 ring-gray-400'
-                        : 'border-gray-300 hover:border-gray-400'
-                    } ${!color.habilitado ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    className={`relative w-12 h-12 rounded-lg border-2 border-gray-300 ${!color.habilitado ? 'opacity-50' : ''}`}
                     style={{ backgroundColor: color.codigo }}
                     title={color.nombre}
-                  >
-                    {selectedColor === color.nombre && (
-                      <div className="absolute inset-0 flex items-center justify-center text-white font-bold">✓</div>
-                    )}
-                  </button>
+                  />
                 ))}
               </div>
             </div>
           )}
 
-          {/* Quantity + Add to cart */}
-          {totalSellable > 0 && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-4">
-                <label className="text-sm font-semibold text-gray-900">Cantidad:</label>
-                <div className="flex items-center border border-gray-300 rounded-xl overflow-hidden">
-                  <button
-                    onClick={() => setQty((q) => Math.max(1, q - 1))}
-                    className="px-3 py-2 hover:bg-gray-50 text-lg"
-                  >-</button>
-                  <span className="px-4 py-2 font-medium">{qty}</span>
-                  <button
-                    onClick={() => setQty((q) => Math.min(Math.max(1, availableNow || 1), q + 1))}
-                    className="px-3 py-2 hover:bg-gray-50 text-lg"
-                  >+</button>
-                </div>
-              </div>
-
-              <button
-                onClick={() => {
-                  if (!requireVariant()) return;
-                  if (availableNow < qty) {
-                    toast.error('No hay suficiente stock de esa combinación');
-                    return;
-                  }
-                  addToCart(product, qty, selectedTalla, selectedColor);
-                }}
-                className="btn-primary w-full flex items-center justify-center gap-2 py-3"
-              >
-                <HiOutlineShoppingCart size={20} />
-                Agregar al carrito
-              </button>
-
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={handleBuyWithMP}
-                  className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl transition-all active:scale-95 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={
-                    (product.tallas?.habilitadas?.length > 0 && !selectedTalla) ||
-                    (product.colores?.length > 0 && !selectedColor)
-                  }
-                >
-                  <FaCreditCard size={20} />
-                  <div className="flex flex-col items-center">
-                    <span className="text-xs opacity-90">Pagar con</span>
-                    <span className="text-sm">Mercado Pago</span>
-                  </div>
-                </button>
-
-                <a
-                  onClick={(e) => {
-                    const needsTalla = product.tallas?.habilitadas?.length > 0;
-                    const needsColor = product.colores?.length > 0;
-                    
-                    if (!requireVariant()) {
-                      e.preventDefault();
-                    }
-                  }}
-                  href={(product.tallas?.habilitadas?.length === 0 || selectedTalla) && (product.colores?.length === 0 || selectedColor) ? waLink : '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-3 rounded-xl transition-all active:scale-95 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <FaWhatsapp size={20} />
-                  <div className="flex flex-col items-center">
-                    <span className="text-xs opacity-90">Consultar por</span>
-                    <span className="text-sm">WhatsApp</span>
-                  </div>
-                </a>
-              </div>
-            </div>
-          )}
+          <div className="space-y-3 mt-auto">
+            <p className="text-sm text-gray-600">
+              Este producto se vende solo en packs. Armá tu combinación desde la categoría.
+            </p>
+            {totalSellable > 0 && (
+              <Link to={packsHref} className="btn-primary w-full flex items-center justify-center gap-2 py-3">
+                Ver packs y comprar
+              </Link>
+            )}
+            <a
+              href={waLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-3 rounded-xl transition-all"
+            >
+              <FaWhatsapp size={20} />
+              Consultar por WhatsApp
+            </a>
+          </div>
         </div>
       </div>
 
-      {/* Related products */}
       {related.length > 0 && (
         <section className="pb-16">
           <h2 className="text-xl font-bold mb-6">Productos relacionados</h2>

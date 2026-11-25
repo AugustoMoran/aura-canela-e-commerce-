@@ -156,7 +156,9 @@ const Header = () => {
                         <img src={product.imagenes?.[0]?.url} alt="" className="w-12 h-12 object-cover rounded shadow-sm" />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-bold text-ink truncate">{product.nombre}</p>
-                          <p className="text-xs text-primary-600 font-black">${product.precio.toLocaleString()}</p>
+                          {product.categoria?.nombre && (
+                            <p className="text-xs text-primary-600 font-medium">{product.categoria.nombre}</p>
+                          )}
                         </div>
                       </button>
                     ))) : (

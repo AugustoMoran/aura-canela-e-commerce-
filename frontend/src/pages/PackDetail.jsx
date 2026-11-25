@@ -60,9 +60,7 @@ const PackDetail = () => {
             {pack.nombre || `Pack de ${pack.cantidadUnidades} unidades`}
           </h1>
           <p className="text-3xl font-black text-primary-600 mt-4">{formatCurrency(pack.precio)}</p>
-          <p className="text-sm text-gray-500 mt-1">
-            {pack.cantidadUnidades} unidades · {formatCurrency(pack.precio / pack.cantidadUnidades)} c/u
-          </p>
+          <p className="text-sm text-gray-500 mt-1">{pack.cantidadUnidades} unidades</p>
           {pack.descripcion && (
             <p className="text-gray-600 mt-6 leading-relaxed">{pack.descripcion}</p>
           )}

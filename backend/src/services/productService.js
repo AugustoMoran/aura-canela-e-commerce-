@@ -139,7 +139,9 @@ const sanitizeProductData = (data) => {
   const clean = { ...data };
   if (!clean.categoria) delete clean.categoria;
   if (!clean.descripcion) clean.descripcion = '';
-  if (!clean.precioOferta) clean.precioOferta = null;
+  // Venta solo por pack: no se usa precio unitario
+  clean.precio = 0;
+  clean.precioOferta = null;
   if (Array.isArray(clean.variantes)) {
     clean.variantes = clean.variantes.map((v) => ({
       talla: v.talla || '',

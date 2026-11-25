@@ -1,6 +1,5 @@
 const Cart = require('../models/Cart');
-const Product = require('../models/Product');
-const { variantStock, toPublicProduct } = require('../utils/productStock');
+const { toPublicProduct } = require('../utils/productStock');
 
 const getCart = async (userId) => {
   const cart = await Cart.findOne({ usuario: userId }).populate({
@@ -24,16 +23,14 @@ const syncCart = async (userId, items) => {
 
   cart.items = [];
   for (const item of items) {
-    const product = await Product.findOne({ _id: item.producto, isActive: true });
-    if (!product) continue;
-    const available = variantStock(product, item.talla, item.color);
-    if (available <= 0) continue;
-    cart.items.push({
-      producto: item.producto,
-      cantidad: Math.min(item.cantidad, available),
-      talla: item.talla,
-      color: item.color,
-    });
+    // Solo packs: la venta unitaria está deshabilitada
+    if (item.isPack && item.packInfo) {
+      cart.items.push({
+        isPack: true,
+        cantidad: 1,
+        packInfo: item.packInfo,
+      });
+    }
   }
 
   await cart.save();
@@ -53,59 +50,10 @@ const addToCart = async (userId, productoId, cantidad = 1, talla, color, packPay
     return getCart(userId);
   }
 
-  // Normalizar null/undefined
-  talla = talla || null;
-  color = color || null;
-  
-  const product = await Product.findOne({ _id: productoId, isActive: true });
-  if (!product) throw Object.assign(new Error('Producto no encontrado.'), { statusCode: 404 });
-
-  // Solo validar talla si el producto tiene tallas habilitadas
-  if (product.tallas?.habilitadas?.length > 0 && talla) {
-    if (!product.tallas.habilitadas.includes(talla)) {
-      throw Object.assign(new Error('Talla no disponible.'), { statusCode: 400 });
-    }
-  }
-  
-  // Solo validar color si el producto tiene colores
-  if (product.colores?.length > 0 && color) {
-    const colorDisponible = product.colores.find(c => c.nombre === color || c.codigo === color);
-    if (!colorDisponible || !colorDisponible.habilitado) {
-      throw Object.assign(new Error('Color no disponible.'), { statusCode: 400 });
-    }
-  }
-
-  let cart = await Cart.findOne({ usuario: userId });
-  if (!cart) cart = new Cart({ usuario: userId, items: [] });
-
-  // Buscar item con mismo producto, talla y color
-  const existing = cart.items.find(
-    (i) =>
-      !i.isPack &&
-      i.producto &&
-      i.producto.toString() === productoId.toString() &&
-      i.talla === talla &&
-      i.color === color
+  throw Object.assign(
+    new Error('Los productos solo se venden por pack. Armá un pack para agregarlo al carrito.'),
+    { statusCode: 400 }
   );
-  
-  const available = variantStock(product, talla, color);
-  if (available <= 0) {
-    throw Object.assign(new Error('Sin stock para esa talla y color.'), { statusCode: 400 });
-  }
-
-  if (existing) {
-    existing.cantidad = Math.min(existing.cantidad + cantidad, available);
-  } else {
-    cart.items.push({ 
-      producto: productoId, 
-      cantidad: Math.min(cantidad, available),
-      talla,
-      color
-    });
-  }
-
-  await cart.save();
-  return getCart(userId);
 };
 
 const updateCartItem = async (userId, productoId, cantidad, talla, color) => {

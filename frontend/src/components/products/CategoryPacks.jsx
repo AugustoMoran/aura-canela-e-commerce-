@@ -201,9 +201,6 @@ const CategoryPacks = ({ categoriaId, categoriaNombre, lockPackId }) => {
                 </span>
               </div>
               <p className="text-lg font-black text-primary-600">{formatCurrency(pack.precio)}</p>
-              <p className="text-[11px] text-gray-500 mt-1">
-                {formatCurrency(pack.precio / pack.cantidadUnidades)} por unidad
-              </p>
             </button>
           );
         })}

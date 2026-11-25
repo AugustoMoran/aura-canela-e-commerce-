@@ -1,10 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { FiSend, FiX, FiMessageSquare, FiShoppingBag, FiShoppingCart, FiArrowRight } from 'react-icons/fi';
+import { FiSend, FiX, FiMessageSquare, FiShoppingBag, FiArrowRight } from 'react-icons/fi';
 import { RiRobot2Line } from 'react-icons/ri';
 import { useNavigate } from 'react-router-dom';
 import { sendChatMessage } from '../../services/chatApi';
-import { formatCurrency } from '../../utils/formatCurrency';
-import useCart from '../../hooks/useCart';
 
 // ─── Session ID ───────────────────────────────────────────────────────────────
 // Persisted per browser tab so the analytics plugin can track sessions
@@ -14,25 +12,18 @@ const SESSION_ID = `session_${Date.now()}_${Math.random().toString(36).slice(2, 
 const INITIAL_MESSAGE = {
   id:   'init',
   role: 'assistant',
-  text: '¡Hola! 👋 Soy tu asistente de compras. Puedo ayudarte a encontrar productos, consultar precios y recomendarte opciones. ¿Qué estás buscando?',
+  text: '¡Hola! 👋 Soy tu asistente de compras. Puedo ayudarte a encontrar productos y packs. ¿Qué estás buscando?',
   products: [],
   actions:  [],
 };
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
-function ProductCard({ product, onAddToCart, onBuyNow }) {
-  // Normalizar campos comunes que pueden venir con nombres distintos
+function ProductCard({ product, onViewProduct }) {
   const name = product.name || product.nombre || 'Producto';
   const image = product.image || (product.imagenes && product.imagenes[0]?.url) || null;
-  const priceVal = (
-    product.salePrice ?? product.precioOferta ?? product.price ?? product.precio ?? null
-  );
-  const priceNum = Number(priceVal);
-  const price = Number.isFinite(priceNum) && priceNum > 0 ? formatCurrency(priceNum) : 'Sin precio';
 
   return (
     <div className="flex flex-col gap-1.5 p-2 rounded-lg border border-natural-dark bg-white hover:border-primary-400 transition-colors w-full">
-      {/* Top row: image, name, price */}
       <div className="flex items-start gap-2">
         {image ? (
           <img
@@ -48,34 +39,23 @@ function ProductCard({ product, onAddToCart, onBuyNow }) {
 
         <div className="min-w-0 flex-1">
           <p className="text-xs font-medium text-ink truncate">{name}</p>
-          <p className="text-xs font-bold text-primary-600">{price}</p>
+          <p className="text-[10px] text-gray-500">Disponible en packs</p>
         </div>
       </div>
 
-      {/* Bottom row: buttons */}
-      <div className="flex gap-1">
-        <button
-          onClick={() => onAddToCart(product)}
-          className="flex-1 px-2 py-1 text-xs rounded-md bg-primary-400 hover:bg-primary-500 text-ink font-medium transition-colors flex items-center justify-center gap-1"
-          title="Agregar al carrito"
-        >
-          <FiShoppingCart size={12} />
-          Carrito
-        </button>
-        <button
-          onClick={() => onBuyNow(product)}
-          className="flex-1 px-2 py-1 text-xs rounded-md bg-ink hover:bg-ink/80 text-white font-medium transition-colors flex items-center justify-center gap-1"
-          title="Comprar ahora"
-        >
-          <FiArrowRight size={12} />
-          Comprar
-        </button>
-      </div>
+      <button
+        onClick={() => onViewProduct(product)}
+        className="w-full px-2 py-1 text-xs rounded-md bg-ink hover:bg-ink/80 text-white font-medium transition-colors flex items-center justify-center gap-1"
+        title="Ver producto"
+      >
+        <FiArrowRight size={12} />
+        Ver producto
+      </button>
     </div>
   );
 }
 
-function Message({ msg, onAddToCart, onBuyNow }) {
+function Message({ msg, onViewProduct }) {
   const isUser = msg.role === 'user';
 
   return (
@@ -106,8 +86,7 @@ function Message({ msg, onAddToCart, onBuyNow }) {
               <ProductCard
                 key={p.id ? `${p.id}_${idx}` : idx}
                 product={p}
-                onAddToCart={onAddToCart}
-                onBuyNow={onBuyNow}
+                onViewProduct={onViewProduct}
               />
             ))}
           </div>
@@ -144,44 +123,15 @@ export default function ChatWidget() {
   const [unread, setUnread]       = useState(0);
 
   const navigate = useNavigate();
-  const { addToCart } = useCart();
 
   const bottomRef  = useRef(null);
   const inputRef   = useRef(null);
 
-  // ─── Product handlers ─────────────────────────────────────────────────────
-  const handleAddToCart = (product) => {
-    // Transform product from AI format to cart format
-    const productForCart = {
-      _id:           product.id || product._id,
-      nombre:        product.name || product.nombre || 'Producto',
-      precio:        product.price || product.precio || 0,
-      precioOferta:  product.salePrice || product.precioOferta || null,
-      stock:         product.stock || 1,
-      imagenes:      product.image ? [{ url: product.image }] : [],
-      descripcion:   product.description || product.descripcion || '',
-      categoria:     product.category || product.categoria || '',
-      tags:          product.tags || [],
-    };
-    console.log('[ChatWidget] Adding to cart:', productForCart);
-    addToCart(productForCart, 1);
-  };
-
-  const handleBuyNow = async (product) => {
-    // Transform product from AI format to cart format
-    const productForCart = {
-      _id:           product.id || product._id,
-      nombre:        product.name || product.nombre || 'Producto',
-      precio:        product.price || product.precio || 0,
-      precioOferta:  product.salePrice || product.precioOferta || null,
-      stock:         product.stock || 1,
-      imagenes:      product.image ? [{ url: product.image }] : [],
-      descripcion:   product.description || product.descripcion || '',
-      categoria:     product.category || product.categoria || '',
-      tags:          product.tags || [],
-    };
-    await addToCart(productForCart, 1);
-    navigate('/checkout');
+  const handleViewProduct = (product) => {
+    const id = product.id || product._id;
+    if (!id) return;
+    setOpen(false);
+    navigate(`/productos/${id}`);
   };
 
   // Scroll to latest message
@@ -296,8 +246,7 @@ export default function ChatWidget() {
               <Message 
                 key={msg.id ? `${msg.id}_${idx}` : idx} 
                 msg={msg}
-                onAddToCart={handleAddToCart}
-                onBuyNow={handleBuyNow}
+                onViewProduct={handleViewProduct}
               />
             ))}
 

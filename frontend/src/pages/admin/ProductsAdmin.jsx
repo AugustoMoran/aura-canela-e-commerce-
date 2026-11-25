@@ -14,7 +14,6 @@ import {
   useGetProductSuggestionsQuery,
 } from '../../services/productsApi';
 import { useUploadImageMutation } from '../../services/cartApi';
-import { formatCurrency } from '../../utils/formatCurrency';
 import toast from 'react-hot-toast';
 import { HiOutlinePlus, HiOutlineTrash, HiOutlinePencil, HiX, HiOutlinePhotograph, HiOutlineSearch, HiOutlineRefresh, HiOutlineFilm } from 'react-icons/hi';
 
@@ -38,8 +37,6 @@ const rebuildVariantes = (tallas, colores, prev) => {
 const EMPTY = { 
   nombre: '', 
   descripcion: '', 
-  precio: '', 
-  precioOferta: '', 
   stock: '', 
   categoria: '', 
   tags: '',
@@ -56,8 +53,6 @@ const EMPTY = {
 const normalizeForm = (formData) => ({
   nombre: String(formData.nombre || ''),
   descripcion: String(formData.descripcion || ''),
-  precio: String(formData.precio || ''),
-  precioOferta: String(formData.precioOferta || ''),
   stock: String(formData.stock || ''),
   categoria: String(formData.categoria || ''),
   tags: String(formData.tags || ''),
@@ -216,9 +211,8 @@ const ProductsAdmin = () => {
     e.preventDefault();
     setUploading(true);
     try {
-      // Validar que los valores requeridos no sean vacíos
-      if (!form.nombre.trim() || !form.precio) {
-        toast.error('Nombre y Precio son requeridos');
+      if (!form.nombre.trim()) {
+        toast.error('El nombre es requerido');
         setUploading(false);
         return;
       }
@@ -237,8 +231,6 @@ const ProductsAdmin = () => {
       const payload = {
         nombre: form.nombre.trim(),
         descripcion: form.descripcion.trim(),
-        precio: Number(form.precio),
-        precioOferta: form.precioOferta ? Number(form.precioOferta) : undefined,
         stock: Number(form.stock) || 0,
         categoria: form.categoria || undefined,
         peso: pesoVal,
@@ -303,8 +295,6 @@ const ProductsAdmin = () => {
     setForm(normalizeForm({
       nombre: p.nombre,
       descripcion: p.descripcion,
-      precio: p.precio,
-      precioOferta: p.precioOferta,
       stock: p.needsStockAssignment ? p.stockAnterior : p.stock,
       categoria: p.categoria?._id || p.categoria || '',
       tags: p.tags?.join(', ') || '',
@@ -420,7 +410,7 @@ const ProductsAdmin = () => {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">{product.nombre}</p>
                     <p className="text-xs text-gray-500">
-                      ${product.precioOferta ? product.precioOferta.toLocaleString('es-AR') : product.precio.toLocaleString('es-AR')}
+                      {product.categoria?.nombre || 'Sin categoría'}
                     </p>
                   </div>
                 </button>
@@ -465,14 +455,6 @@ const ProductsAdmin = () => {
             <div className="md:col-span-2">
               <label className="block text-sm font-medium mb-1">Descripción</label>
               <textarea value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} className="input-field" rows={3} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Precio *</label>
-              <input type="text" inputMode="decimal" value={form.precio} onChange={(e) => { const v = e.target.value; if (v === '' || !isNaN(v)) setForm({ ...form, precio: v }); }} className="input-field" required placeholder="0.00" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Precio oferta (opcional)</label>
-              <input type="text" inputMode="decimal" value={form.precioOferta} onChange={(e) => { const v = e.target.value; if (v === '' || !isNaN(v)) setForm({ ...form, precioOferta: v }); }} className="input-field" placeholder="0.00" />
             </div>
             {!(form.tallas.habilitadas.length || form.colores.length) && (
             <div>
@@ -828,7 +810,6 @@ const ProductsAdmin = () => {
             <tr className="border-b text-left text-gray-500">
               <th className="px-4 py-3 font-medium">Fotos</th>
               <th className="px-4 py-3 font-medium">Nombre</th>
-              <th className="px-4 py-3 font-medium">Precio</th>
               <th className="px-4 py-3 font-medium">Stock</th>
               <th className="px-4 py-3 font-medium">Acciones</th>
             </tr>
@@ -836,7 +817,7 @@ const ProductsAdmin = () => {
           <tbody>
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i}><td colSpan={5} className="px-4 py-4"><div className="h-4 bg-gray-100 rounded animate-pulse" /></td></tr>
+                <tr key={i}><td colSpan={4} className="px-4 py-4"><div className="h-4 bg-gray-100 rounded animate-pulse" /></td></tr>
               ))
             ) : (data?.products || []).map((p) => (
               <tr key={p._id} className="border-b last:border-0 hover:bg-gray-50">
@@ -857,7 +838,6 @@ const ProductsAdmin = () => {
                   </div>
                 </td>
                 <td className="px-4 py-3 font-medium max-w-[200px] truncate">{p.nombre}</td>
-                <td className="px-4 py-3">{formatCurrency(p.precioOferta || p.precio)}</td>
                 <td className="px-4 py-3">
                   {restockId === p._id ? (
                     <div className="flex items-center gap-1">
