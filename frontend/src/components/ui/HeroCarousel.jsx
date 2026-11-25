@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Navigation, Pagination, EffectFade } from 'swiper/modules';
 import { Link } from 'react-router-dom';
@@ -29,18 +29,28 @@ const DEFAULT_SLIDES = [
   }
 ];
 
+const mapBanner = (b) => ({
+  ...b,
+  esVideoValido: b.video?.trim().startsWith('http'),
+  esImagenValida: b.imagen?.trim().startsWith('http'),
+  mostrarTexto: b.mostrarTexto === true || b.mostrarTexto === 'true',
+  mostrarBoton: b.mostrarBoton === true || b.mostrarBoton === 'true',
+});
+
 const HeroCarousel = () => {
-  const { data: apiBanners } = useGetBannersQuery(true);
-  
-  const slides = apiBanners && apiBanners.length > 0 
-    ? apiBanners.map(b => ({
-      ...b,
-      esVideoValido: b.video?.trim().startsWith('http'),
-      esImagenValida: b.imagen?.trim().startsWith('http'),
-      mostrarTexto: b.mostrarTexto === true || b.mostrarTexto === 'true',
-      mostrarBoton: b.mostrarBoton === true || b.mostrarBoton === 'true'
-    })) 
-    : DEFAULT_SLIDES;
+  const { data: apiBanners, isLoading, isFetching } = useGetBannersQuery(true);
+
+  // Mientras carga, no mostrar defaults: evita el flash de imágenes de Unsplash
+  if (isLoading || (isFetching && !apiBanners)) {
+    return (
+      <div className="w-full aspect-[21/9] sm:aspect-[21/7] bg-natural animate-pulse" />
+    );
+  }
+
+  const slides =
+    apiBanners && apiBanners.length > 0
+      ? apiBanners.map(mapBanner)
+      : DEFAULT_SLIDES;
 
   return (
     <div className="w-full relative group hero-slider">

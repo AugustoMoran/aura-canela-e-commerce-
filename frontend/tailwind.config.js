@@ -37,7 +37,7 @@ export default {
         'fade-in': 'fadeIn 0.3s ease-in-out',
         'slide-in': 'slideIn 0.3s ease-out',
         'slide-up': 'slideUp 0.3s ease-out',
-        'marquee': 'marquee 4000s linear infinite',
+        'marquee': 'marquee 25s linear infinite',
       },
       keyframes: {
         fadeIn: { from: { opacity: 0 }, to: { opacity: 1 } },
