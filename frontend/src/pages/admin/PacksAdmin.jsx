@@ -9,6 +9,7 @@ import {
 } from '../../services/packsApi';
 import { formatCurrency } from '../../utils/formatCurrency';
 import { useUploadImageMutation } from '../../services/cartApi';
+import { HiOutlinePencil, HiOutlineTrash, HiX } from 'react-icons/hi';
 
 const PacksAdmin = () => {
   const { data: packsData, isLoading: loadingPacks } = useGetPacksQuery();
@@ -165,7 +166,7 @@ const PacksAdmin = () => {
         )}
 
         {/* Tabla de Packs */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white rounded-lg shadow">
           {loadingPacks || loadingCategories ? (
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
@@ -175,84 +176,105 @@ const PacksAdmin = () => {
               No hay packs registrados. Haga clic en "+ Nuevo Pack" para crear uno.
             </div>
           ) : (
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Categoría
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Nombre Pack
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Unidades
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Precio Total
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Estado
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {packs.map((pack) => (
-                  <tr key={pack._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                      {pack.categoria?.nombre || 'Categoría no asignada'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {pack.nombre || `Pack de ${pack.cantidadUnidades} u.`}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                      {pack.cantidadUnidades} unidades
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-600 font-bold">
-                      {formatCurrency(pack.precio)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                          pack.activo
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-primary-100 text-primary-800'
-                        }`}
-                      >
-                        {pack.activo ? 'Activo' : 'Inactivo'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                      <button
-                        onClick={() => handleOpenModal(pack)}
-                        className="text-indigo-600 hover:text-indigo-900"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => handleDelete(pack._id)}
-                        disabled={isDeleting}
-                        className="text-primary-600 hover:text-primary-800 disabled:opacity-50"
-                      >
-                        Eliminar
-                      </button>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Categoría
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[180px]">
+                      Nombre Pack
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Unidades
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Precio
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Estado
+                    </th>
+                    <th className="sticky right-0 z-10 bg-gray-50 px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.12)]">
+                      Acciones
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {packs.map((pack) => (
+                    <tr key={pack._id} className="hover:bg-gray-50 group">
+                      <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                        {pack.categoria?.nombre || 'Categoría no asignada'}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-600 max-w-[280px]">
+                        <span className="line-clamp-2" title={pack.nombre || undefined}>
+                          {pack.nombre || `Pack de ${pack.cantidadUnidades} u.`}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                        {pack.cantidadUnidades} u.
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-primary-600 font-bold">
+                        {formatCurrency(pack.precio)}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm">
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                            pack.activo
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-primary-100 text-primary-800'
+                          }`}
+                        >
+                          {pack.activo ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </td>
+                      <td className="sticky right-0 z-10 bg-white group-hover:bg-gray-50 px-4 py-4 whitespace-nowrap text-right shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.12)]">
+                        <div className="inline-flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenModal(pack)}
+                            title="Editar pack"
+                            className="p-2 rounded-lg hover:bg-indigo-50 text-indigo-600"
+                          >
+                            <HiOutlinePencil size={16} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(pack._id)}
+                            disabled={isDeleting}
+                            title="Eliminar pack"
+                            className="p-2 rounded-lg hover:bg-red-50 text-red-500 disabled:opacity-50"
+                          >
+                            <HiOutlineTrash size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 
         {/* Modal Formulario */}
         {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-            <div className="bg-white rounded-lg max-w-lg w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">
-                {editingPack ? 'Editar Pack' : 'Nuevo Pack de Categoría'}
-              </h3>
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
+            onClick={handleCloseModal}
+          >
+            <div
+              className="bg-white rounded-lg max-w-lg w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-800">
+                  {editingPack ? 'Editar Pack' : 'Nuevo Pack de Categoría'}
+                </h3>
+                <button type="button" onClick={handleCloseModal} className="p-1 rounded-lg hover:bg-gray-100 text-gray-500">
+                  <HiX size={20} />
+                </button>
+              </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
