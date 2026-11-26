@@ -170,7 +170,8 @@ const checkMercadoPagoStatus = async (req, res, next) => {
     console.log(`🔄 Redirigiendo usuario a confirmación...\n`);
     const order = await Order.findById(orderId).select('codigo');
     const codigo = order?.codigo ? `&codigo=${order.codigo}` : '';
-    res.redirect(`${process.env.FRONTEND_URL}/orden/confirmacion?status=${status}&order=${orderId}${codigo}`);
+    const coord = (status === 'success' || status === 'approved') ? '&coord=1' : '';
+    res.redirect(`${process.env.FRONTEND_URL}/orden/confirmacion?status=${status}&order=${orderId}${codigo}${coord}`);
 
   } catch (error) {
     console.error('❌ ERROR en checkMercadoPagoStatus:', error.message);

@@ -1,8 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { HiCheckCircle, HiXCircle, HiOutlineClipboardList } from 'react-icons/hi';
+import { FaWhatsapp } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import usePageMeta from '../hooks/usePageMeta';
+import { STORE, waMeUrl } from '../config/storeContact';
 
 const OrderConfirmation = () => {
   usePageMeta({ title: 'Pedido realizado' });
@@ -13,7 +15,26 @@ const OrderConfirmation = () => {
   const [params] = useSearchParams();
   const status = params.get('status') || 'success';
   const codigo = params.get('codigo');
+  const shouldCoord = params.get('coord') === '1';
   const isSuccess = status === 'success' || status === 'approved';
+
+  const waUrl = useMemo(() => {
+    const lines = [
+      `Hola ${STORE.name} 💕`,
+      'Acabo de pagar mi pedido y quiero coordinar la entrega.',
+    ];
+    if (codigo) lines.push('', `Código de pedido: ${codigo}`);
+    return waMeUrl(lines.join('\n'));
+  }, [codigo]);
+
+  // Tras pago con Mercado Pago, abrir WhatsApp para coordinar envío/retiro
+  useEffect(() => {
+    if (!isSuccess || !shouldCoord) return;
+    const t = setTimeout(() => {
+      window.open(waUrl, '_blank');
+    }, 600);
+    return () => clearTimeout(t);
+  }, [isSuccess, shouldCoord, waUrl]);
 
   const copyCode = () => {
     if (!codigo) return;
@@ -34,7 +55,7 @@ const OrderConfirmation = () => {
         </h1>
         <p className="text-gray-500 text-sm mb-6">
           {isSuccess
-            ? 'Guardá el código para seguir el estado. También te llega por mail cuando SMTP esté configurado.'
+            ? 'Coordiná el envío o el retiro por WhatsApp. Guardá el código para seguir el estado.'
             : 'Hubo un problema al procesar tu pago. Podés intentarlo nuevamente.'}
         </p>
 
@@ -50,6 +71,17 @@ const OrderConfirmation = () => {
         )}
 
         <div className="flex flex-col gap-3">
+          {isSuccess && (
+            <a
+              href={waUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center justify-center gap-2 font-bold px-6 py-3 rounded-xl bg-green-500 hover:bg-green-400 text-white transition-all active:scale-95"
+            >
+              <FaWhatsapp size={18} />
+              Coordinar por WhatsApp
+            </a>
+          )}
           {isSuccess && (
             <Link to={codigo ? `/pedido` : '/mis-ordenes'} className="btn-primary flex items-center justify-center gap-2">
               <HiOutlineClipboardList size={18} />
