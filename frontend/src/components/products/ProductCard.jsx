@@ -1,20 +1,32 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { HiOutlineHeart, HiHeart } from 'react-icons/hi';
+import { HiOutlineHeart, HiHeart, HiOutlineShoppingCart } from 'react-icons/hi';
+import { formatCurrency } from '../../utils/formatCurrency';
+import useCart from '../../hooks/useCart';
 import { useToggleFavoriteMutation, useGetMeQuery } from '../../services/authApi';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '../../features/auth/authSlice';
 import toast from 'react-hot-toast';
-import { sellableStock } from '../../utils/productStock';
+import { usesVariants, sellableStock } from '../../utils/productStock';
 
 const ProductCard = ({ product }) => {
+  const { addToCart } = useCart();
   const user = useSelector(selectCurrentUser);
   const { data: me } = useGetMeQuery(undefined, { skip: !user });
   const [toggleFavorite] = useToggleFavoriteMutation();
 
   const isFavorite = me?.favoritos?.includes(product._id);
   const image = product.imagenes?.[0]?.url || 'https://via.placeholder.com/400x400?text=Sin+imagen';
+  const sellsByUnit = Boolean(product.ventaPorUnidad) && Number(product.precio) > 0;
+  const displayPrice = product.precioOferta || product.precio;
+  const hasDiscount = sellsByUnit && product.precioOferta && product.precioOferta < product.precio;
   const inStock = sellableStock(product) > 0;
+
+  const handleAddToCart = (e) => {
+    e.preventDefault();
+    if (!sellsByUnit || usesVariants(product)) return;
+    addToCart(product, 1);
+  };
 
   const handleFavorite = async (e) => {
     e.preventDefault();
@@ -34,6 +46,11 @@ const ProductCard = ({ product }) => {
           loading="lazy"
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
+        {hasDiscount && (
+          <span className="absolute top-3 left-3 bg-primary-600 text-white font-black text-[10px] px-2 py-1 rounded-full uppercase tracking-widest shadow-lg">
+            -{Math.round(((product.precio - product.precioOferta) / product.precio) * 100)}% OFF
+          </span>
+        )}
 
         {/* Favorite */}
         <button
@@ -46,6 +63,18 @@ const ProductCard = ({ product }) => {
             <HiOutlineHeart size={18} className="text-ink" />
           )}
         </button>
+
+        {inStock && sellsByUnit && !usesVariants(product) && (
+          <div className="absolute inset-x-0 bottom-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 hidden md:block">
+            <button
+              onClick={handleAddToCart}
+              className="w-full bg-ink/90 hover:bg-primary-600 text-white text-xs font-black py-3 px-4 rounded-xl backdrop-blur-sm transition-colors uppercase tracking-widest shadow-2xl flex items-center justify-center gap-2"
+            >
+              <HiOutlineShoppingCart size={16} />
+              Agregar al carrito
+            </button>
+          </div>
+        )}
 
         {!inStock && (
           <div className="absolute inset-0 bg-ink/40 backdrop-blur-[2px] flex items-center justify-center">
@@ -60,7 +89,28 @@ const ProductCard = ({ product }) => {
         <h3 className="font-bold text-sm line-clamp-2 mb-3 text-ink group-hover:text-primary-600 transition-colors flex-1 leading-tight">
           {product.nombre}
         </h3>
-        <p className="text-xs text-gray-500 font-medium">Disponible en packs</p>
+        {sellsByUnit ? (
+          <div className="flex flex-col gap-0.5">
+            {hasDiscount && (
+              <span className="text-xs text-gray-400 line-through font-medium">{formatCurrency(product.precio)}</span>
+            )}
+            <div className="flex items-center justify-between">
+              <span className="font-black text-xl text-primary-700 tracking-tighter">
+                {formatCurrency(displayPrice)}
+              </span>
+              {inStock && !usesVariants(product) && (
+                <button
+                  onClick={handleAddToCart}
+                  className="md:hidden w-8 h-8 rounded-full bg-natural flex items-center justify-center text-ink hover:bg-primary-600 hover:text-white transition-colors"
+                >
+                  <HiOutlineShoppingCart size={16} />
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <p className="text-xs text-gray-500 font-medium">Disponible en packs</p>
+        )}
       </div>
     </Link>
   );

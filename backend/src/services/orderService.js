@@ -70,7 +70,15 @@ const createOrder = async ({ userId, guestData, items, cuponCodigo, metodoPago, 
       }
     }
 
-    let precio = product.precioOferta || product.precio;
+    const unitPrice = Number(product.precioOferta || product.precio || 0);
+    if (!item.packId && (!product.ventaPorUnidad || !(unitPrice > 0))) {
+      throw Object.assign(
+        new Error(`${product.nombre} solo se vende por pack.`),
+        { statusCode: 400 }
+      );
+    }
+
+    let precio = unitPrice;
     if (item.packId) {
       if (!packPriceCache[item.packId]) {
         const pack = await Pack.findById(item.packId);
