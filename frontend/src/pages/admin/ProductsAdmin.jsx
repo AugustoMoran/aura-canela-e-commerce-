@@ -239,16 +239,11 @@ const ProductsAdmin = () => {
         }
       }
 
-      const pesoVal = Number(form.peso);
-      const largoVal = Number(form.largo);
-      const anchoVal = Number(form.ancho);
-      const altoVal = Number(form.alto);
-
-      if (pesoVal <= 0 || largoVal <= 0 || anchoVal <= 0 || altoVal <= 0) {
-        toast.error('Peso, Largo, Ancho y Alto deben ser valores mayores a 0 para el cálculo de envíos');
-        setUploading(false);
-        return;
-      }
+      const optionalMeasure = (value) => {
+        if (value === '' || value == null) return 0;
+        const n = Number(value);
+        return Number.isFinite(n) && n > 0 ? n : 0;
+      };
 
       const payload = {
         nombre: form.nombre.trim(),
@@ -258,10 +253,10 @@ const ProductsAdmin = () => {
         precioOferta: form.ventaPorUnidad ? precioOferta : null,
         stock: Number(form.stock) || 0,
         categoria: form.categoria || undefined,
-        peso: pesoVal,
-        largo: largoVal,
-        ancho: anchoVal,
-        alto: altoVal,
+        peso: optionalMeasure(form.peso),
+        largo: optionalMeasure(form.largo),
+        ancho: optionalMeasure(form.ancho),
+        alto: optionalMeasure(form.alto),
         tags: form.tags ? form.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
         tallas: form.tallas,
         colores: form.colores,
@@ -502,33 +497,40 @@ const ProductsAdmin = () => {
                   </span>
                 </span>
               </label>
-              {form.ventaPorUnidad && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Precio por unidad *</label>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      value={form.precio}
-                      onChange={(e) => { const v = e.target.value; if (v === '' || !isNaN(v)) setForm({ ...form, precio: v }); }}
-                      className="input-field"
-                      required
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Precio oferta (opcional)</label>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      value={form.precioOferta}
-                      onChange={(e) => { const v = e.target.value; if (v === '' || !isNaN(v)) setForm({ ...form, precioOferta: v }); }}
-                      className="input-field"
-                      placeholder="0.00"
-                    />
-                  </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Precio por unidad {form.ventaPorUnidad ? '*' : ''}</label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={form.precio}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (v === '' || !isNaN(v)) {
+                        setForm({
+                          ...form,
+                          precio: v,
+                          ventaPorUnidad: v !== '' && Number(v) > 0 ? true : form.ventaPorUnidad,
+                        });
+                      }
+                    }}
+                    className="input-field"
+                    required={form.ventaPorUnidad}
+                    placeholder="0.00"
+                  />
                 </div>
-              )}
+                <div>
+                  <label className="block text-sm font-medium mb-1">Precio oferta (opcional)</label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={form.precioOferta}
+                    onChange={(e) => { const v = e.target.value; if (v === '' || !isNaN(v)) setForm({ ...form, precioOferta: v }); }}
+                    className="input-field"
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
             </div>
             {!(form.tallas.habilitadas.length || form.colores.length) && (
             <div>
@@ -550,53 +552,49 @@ const ProductsAdmin = () => {
 
             {/* Dimensiones y Peso para Envíos */}
             <div className="md:col-span-2 border-t border-b border-gray-200 py-3 my-2">
-              <h3 className="font-semibold text-sm text-gray-800 mb-2">🚚 Dimensiones y Peso para Envíos (Correo Argentino)</h3>
+              <h3 className="font-semibold text-sm text-gray-800 mb-2">Dimensiones y peso para envíos (opcional)</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Peso (kg) *</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Peso (kg)</label>
                   <input
                     type="text"
                     inputMode="decimal"
                     value={form.peso}
                     onChange={(e) => { const v = e.target.value; if (v === '' || !isNaN(v)) setForm({ ...form, peso: v }); }}
                     className="input-field"
-                    required
                     placeholder="Ej: 0.5"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Largo (cm) *</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Largo (cm)</label>
                   <input
                     type="text"
                     inputMode="decimal"
                     value={form.largo}
                     onChange={(e) => { const v = e.target.value; if (v === '' || !isNaN(v)) setForm({ ...form, largo: v }); }}
                     className="input-field"
-                    required
                     placeholder="Ej: 20"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Ancho (cm) *</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Ancho (cm)</label>
                   <input
                     type="text"
                     inputMode="decimal"
                     value={form.ancho}
                     onChange={(e) => { const v = e.target.value; if (v === '' || !isNaN(v)) setForm({ ...form, ancho: v }); }}
                     className="input-field"
-                    required
                     placeholder="Ej: 15"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Alto (cm) *</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Alto (cm)</label>
                   <input
                     type="text"
                     inputMode="decimal"
                     value={form.alto}
                     onChange={(e) => { const v = e.target.value; if (v === '' || !isNaN(v)) setForm({ ...form, alto: v }); }}
                     className="input-field"
-                    required
                     placeholder="Ej: 10"
                   />
                 </div>
