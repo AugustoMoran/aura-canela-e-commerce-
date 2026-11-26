@@ -11,6 +11,8 @@ import usePageMeta from '../hooks/usePageMeta';
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Más recientes' },
   { value: 'popular', label: 'Más vendidos' },
+  { value: 'price-asc', label: 'Menor precio' },
+  { value: 'price-desc', label: 'Mayor precio' },
 ];
 
 const Products = () => {

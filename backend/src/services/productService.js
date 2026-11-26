@@ -138,10 +138,35 @@ const getRelatedProducts = async (productId, categoriaId, limit = 4) => {
 const sanitizeProductData = (data) => {
   const clean = { ...data };
   if (!clean.categoria) delete clean.categoria;
-  if (!clean.descripcion) clean.descripcion = '';
-  // Venta solo por pack: no se usa precio unitario
-  clean.precio = 0;
-  clean.precioOferta = null;
+  if (clean.descripcion == null) clean.descripcion = '';
+
+  // Reposición de stock y otros updates parciales no tocan el precio
+  const touchesPrice = clean.ventaPorUnidad != null || clean.precio != null || clean.nombre != null;
+  if (touchesPrice && clean.ventaPorUnidad != null) {
+    clean.ventaPorUnidad = Boolean(clean.ventaPorUnidad);
+    if (!clean.ventaPorUnidad) {
+      clean.precio = 0;
+      clean.precioOferta = null;
+    } else {
+      const precio = Number(clean.precio);
+      if (!(precio > 0)) {
+        throw Object.assign(
+          new Error('Para publicar por unidad el precio tiene que ser mayor a 0.'),
+          { statusCode: 400 }
+        );
+      }
+      clean.precio = precio;
+      const ofertaRaw = clean.precioOferta;
+      const oferta = ofertaRaw === '' || ofertaRaw == null ? null : Number(ofertaRaw);
+      if (oferta != null && (!(oferta > 0) || oferta >= precio)) {
+        throw Object.assign(
+          new Error('El precio de oferta tiene que ser mayor a 0 y menor al precio.'),
+          { statusCode: 400 }
+        );
+      }
+      clean.precioOferta = oferta;
+    }
+  }
   if (Array.isArray(clean.variantes)) {
     clean.variantes = clean.variantes.map((v) => ({
       talla: v.talla || '',
@@ -238,7 +263,7 @@ const getSuggestions = async (q, limit = 10) => {
       { tags: { $regex: query, $options: 'i' } },
     ],
   })
-    .select('_id nombre precio precioOferta imagenes')
+    .select('_id nombre precio precioOferta ventaPorUnidad imagenes')
     .limit(limit)
     .lean();
   

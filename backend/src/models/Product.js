@@ -21,7 +21,8 @@ const productSchema = new mongoose.Schema(
   {
     nombre: { type: String, required: true, trim: true },
     descripcion: { type: String, default: '' },
-    // Precio unitario deshabilitado: la venta es solo por pack (Pack.precio)
+    // Si está activo, el producto también se vende suelto a `precio` (los packs siguen disponibles)
+    ventaPorUnidad: { type: Boolean, default: false },
     precio: { type: Number, default: 0, min: 0 },
     precioOferta: { type: Number, default: null, min: 0 },
     stock: { type: Number, required: true, min: 0, default: 0 },

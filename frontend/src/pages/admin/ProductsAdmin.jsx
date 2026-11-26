@@ -14,6 +14,7 @@ import {
   useGetProductSuggestionsQuery,
 } from '../../services/productsApi';
 import { useUploadImageMutation } from '../../services/cartApi';
+import { formatCurrency } from '../../utils/formatCurrency';
 import toast from 'react-hot-toast';
 import { HiOutlinePlus, HiOutlineTrash, HiOutlinePencil, HiX, HiOutlinePhotograph, HiOutlineSearch, HiOutlineRefresh, HiOutlineFilm } from 'react-icons/hi';
 
@@ -37,6 +38,9 @@ const rebuildVariantes = (tallas, colores, prev) => {
 const EMPTY = { 
   nombre: '', 
   descripcion: '', 
+  ventaPorUnidad: false,
+  precio: '', 
+  precioOferta: '', 
   stock: '', 
   categoria: '', 
   tags: '',
@@ -53,6 +57,9 @@ const EMPTY = {
 const normalizeForm = (formData) => ({
   nombre: String(formData.nombre || ''),
   descripcion: String(formData.descripcion || ''),
+  ventaPorUnidad: Boolean(formData.ventaPorUnidad),
+  precio: formData.precio === 0 || formData.precio ? String(formData.precio) : '',
+  precioOferta: formData.precioOferta ? String(formData.precioOferta) : '',
   stock: String(formData.stock || ''),
   categoria: String(formData.categoria || ''),
   tags: String(formData.tags || ''),
@@ -217,6 +224,21 @@ const ProductsAdmin = () => {
         return;
       }
 
+      const precioUnitario = Number(form.precio);
+      const precioOferta = form.precioOferta ? Number(form.precioOferta) : null;
+      if (form.ventaPorUnidad) {
+        if (!(precioUnitario > 0)) {
+          toast.error('Para publicar por unidad cargá un precio mayor a 0');
+          setUploading(false);
+          return;
+        }
+        if (precioOferta != null && (!(precioOferta > 0) || precioOferta >= precioUnitario)) {
+          toast.error('El precio de oferta tiene que ser menor al precio');
+          setUploading(false);
+          return;
+        }
+      }
+
       const pesoVal = Number(form.peso);
       const largoVal = Number(form.largo);
       const anchoVal = Number(form.ancho);
@@ -231,6 +253,9 @@ const ProductsAdmin = () => {
       const payload = {
         nombre: form.nombre.trim(),
         descripcion: form.descripcion.trim(),
+        ventaPorUnidad: Boolean(form.ventaPorUnidad),
+        precio: form.ventaPorUnidad ? precioUnitario : 0,
+        precioOferta: form.ventaPorUnidad ? precioOferta : null,
         stock: Number(form.stock) || 0,
         categoria: form.categoria || undefined,
         peso: pesoVal,
@@ -295,6 +320,9 @@ const ProductsAdmin = () => {
     setForm(normalizeForm({
       nombre: p.nombre,
       descripcion: p.descripcion,
+      ventaPorUnidad: Boolean(p.ventaPorUnidad),
+      precio: p.ventaPorUnidad ? p.precio : '',
+      precioOferta: p.ventaPorUnidad ? p.precioOferta : '',
       stock: p.needsStockAssignment ? p.stockAnterior : p.stock,
       categoria: p.categoria?._id || p.categoria || '',
       tags: p.tags?.join(', ') || '',
@@ -410,7 +438,10 @@ const ProductsAdmin = () => {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">{product.nombre}</p>
                     <p className="text-xs text-gray-500">
-                      {product.categoria?.nombre || 'Sin categoría'}
+                      {product.ventaPorUnidad && Number(product.precio) > 0
+                        ? formatCurrency(product.precioOferta || product.precio)
+                        : 'Solo pack'}
+                      {product.categoria?.nombre ? ` · ${product.categoria.nombre}` : ''}
                     </p>
                   </div>
                 </button>
@@ -455,6 +486,49 @@ const ProductsAdmin = () => {
             <div className="md:col-span-2">
               <label className="block text-sm font-medium mb-1">Descripción</label>
               <textarea value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} className="input-field" rows={3} />
+            </div>
+            <div className="md:col-span-2 rounded-xl border border-gray-200 p-4 bg-gray-50">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.ventaPorUnidad}
+                  onChange={(e) => setForm({ ...form, ventaPorUnidad: e.target.checked })}
+                  className="mt-1 w-4 h-4"
+                />
+                <span>
+                  <span className="block text-sm font-semibold text-gray-900">Publicar por unidad</span>
+                  <span className="block text-xs text-gray-500 mt-0.5">
+                    El producto se puede comprar suelto al precio que cargues. Los packs de la categoría siguen disponibles.
+                  </span>
+                </span>
+              </label>
+              {form.ventaPorUnidad && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Precio por unidad *</label>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={form.precio}
+                      onChange={(e) => { const v = e.target.value; if (v === '' || !isNaN(v)) setForm({ ...form, precio: v }); }}
+                      className="input-field"
+                      required
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Precio oferta (opcional)</label>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={form.precioOferta}
+                      onChange={(e) => { const v = e.target.value; if (v === '' || !isNaN(v)) setForm({ ...form, precioOferta: v }); }}
+                      className="input-field"
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
             {!(form.tallas.habilitadas.length || form.colores.length) && (
             <div>
@@ -810,6 +884,7 @@ const ProductsAdmin = () => {
             <tr className="border-b text-left text-gray-500">
               <th className="px-4 py-3 font-medium">Fotos</th>
               <th className="px-4 py-3 font-medium">Nombre</th>
+              <th className="px-4 py-3 font-medium">Precio</th>
               <th className="px-4 py-3 font-medium">Stock</th>
               <th className="px-4 py-3 font-medium">Acciones</th>
             </tr>
@@ -817,7 +892,7 @@ const ProductsAdmin = () => {
           <tbody>
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i}><td colSpan={4} className="px-4 py-4"><div className="h-4 bg-gray-100 rounded animate-pulse" /></td></tr>
+                <tr key={i}><td colSpan={5} className="px-4 py-4"><div className="h-4 bg-gray-100 rounded animate-pulse" /></td></tr>
               ))
             ) : (data?.products || []).map((p) => (
               <tr key={p._id} className="border-b last:border-0 hover:bg-gray-50">
@@ -838,6 +913,13 @@ const ProductsAdmin = () => {
                   </div>
                 </td>
                 <td className="px-4 py-3 font-medium max-w-[200px] truncate">{p.nombre}</td>
+                <td className="px-4 py-3">
+                  {p.ventaPorUnidad && Number(p.precio) > 0 ? (
+                    <span>{formatCurrency(p.precioOferta || p.precio)}</span>
+                  ) : (
+                    <span className="text-xs text-gray-400">Solo pack</span>
+                  )}
+                </td>
                 <td className="px-4 py-3">
                   {restockId === p._id ? (
                     <div className="flex items-center gap-1">

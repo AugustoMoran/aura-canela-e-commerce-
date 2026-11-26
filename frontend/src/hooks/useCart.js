@@ -33,9 +33,9 @@ const useCart = () => {
   const [clearCartApi] = useClearCartMutation();
 
   const handleAddToCart = async (producto, cantidad = 1, talla, color) => {
-    // Venta solo por pack: no se agregan unidades sueltas
-    if (!producto?.isPack && !producto?.packInfo) {
-      toast.error('Los productos solo se venden por pack');
+    const unitPrice = Number(producto?.precioOferta || producto?.precio || 0);
+    if (!producto?.isPack && !producto?.packInfo && (!producto?.ventaPorUnidad || !(unitPrice > 0))) {
+      toast.error('Este producto solo se vende por pack');
       return;
     }
     if (user) {

@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const User = require('../models/User');
 const RefreshToken = require('../models/RefreshToken');
 const Cart = require('../models/Cart');
+const Product = require('../models/Product');
 const { sendPasswordResetEmail } = require('../utils/sendNotifications');
 const {
   generateAccessToken,
@@ -59,15 +60,40 @@ const mergeGuestCart = async (userId, guestItems) => {
   }
 
   for (const guestItem of guestItems) {
-    // Solo packs: la venta unitaria está deshabilitada
-    if (!guestItem.isPack || !guestItem.packInfo) continue;
-
     const cantidad = Math.max(1, Number(guestItem.cantidad) || 1);
-    cart.items.push({
-      isPack: true,
-      cantidad,
-      packInfo: guestItem.packInfo,
-    });
+
+    if (guestItem.isPack && guestItem.packInfo) {
+      cart.items.push({
+        isPack: true,
+        cantidad,
+        packInfo: guestItem.packInfo,
+      });
+      continue;
+    }
+
+    const productoId = guestItem.producto?._id || guestItem.producto;
+    if (!productoId) continue;
+
+    const product = await Product.findOne({ _id: productoId, isActive: true });
+    if (!product?.ventaPorUnidad || !(Number(product.precio) > 0)) continue;
+
+    const talla = guestItem.talla || null;
+    const color = guestItem.color || null;
+
+    const existing = cart.items.find(
+      (i) =>
+        !i.isPack &&
+        i.producto &&
+        i.producto.toString() === productoId.toString() &&
+        (i.talla || null) === talla &&
+        (i.color || null) === color
+    );
+
+    if (existing) {
+      existing.cantidad += cantidad;
+    } else {
+      cart.items.push({ producto: productoId, cantidad, talla, color });
+    }
   }
   await cart.save();
 };
