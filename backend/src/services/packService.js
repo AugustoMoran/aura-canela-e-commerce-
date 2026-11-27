@@ -13,12 +13,6 @@ const createPack = async ({ categoria, cantidadUnidades, precio, nombre, activo,
   const categoryExists = await Category.findById(categoria);
   if (!categoryExists) throw new Error('La categoría especificada no existe.');
 
-  // Validar no duplicar packs con la misma cantidad dentro de una categoría
-  const existingPack = await Pack.findOne({ categoria, cantidadUnidades });
-  if (existingPack) {
-    throw new Error(`Ya existe un pack de ${cantidadUnidades} unidades para la categoría seleccionada.`);
-  }
-
   const pack = await Pack.create({
     nombre: nombre || `Pack de ${cantidadUnidades} unidades`,
     categoria,
@@ -64,24 +58,6 @@ const updatePack = async (id, updateData) => {
   }
   if (updateData.precio && updateData.precio <= 0) {
     throw new Error('El precio debe ser mayor a 0.');
-  }
-
-  const targetCategory = updateData.categoria || pack.categoria;
-  const targetCantidad = updateData.cantidadUnidades || pack.cantidadUnidades;
-
-  // Si cambia categoría o cantidad de unidades, validar duplicado
-  if (
-    targetCategory.toString() !== pack.categoria.toString() ||
-    targetCantidad !== pack.cantidadUnidades
-  ) {
-    const duplicate = await Pack.findOne({
-      _id: { $ne: id },
-      categoria: targetCategory,
-      cantidadUnidades: targetCantidad,
-    });
-    if (duplicate) {
-      throw new Error(`Ya existe un pack de ${targetCantidad} unidades para esa categoría.`);
-    }
   }
 
   Object.assign(pack, updateData);

@@ -39,7 +39,7 @@ const packSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Índice compuesto para evitar dos packs activos/existentes con la misma cantidad en la misma categoría
-packSchema.index({ categoria: 1, cantidadUnidades: 1 }, { unique: true });
+// Consultas por categoría ordenadas por cantidad. No es único: se pueden repetir packs.
+packSchema.index({ categoria: 1, cantidadUnidades: 1 });
 
 module.exports = mongoose.model('Pack', packSchema);
