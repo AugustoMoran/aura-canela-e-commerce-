@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { selectCartItems, selectCartTotal, clearGuestCart } from '../features/cart/cartSlice';
 import { useCreateOrderMutation, useValidateCouponMutation } from '../services/ordersApi';
 import { useGetSiteSettingsQuery } from '../services/siteSettingsApi';
@@ -29,6 +29,9 @@ const Checkout = () => {
   }, []);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const requestedMethod = searchParams.get('metodo');
+  const appliedMethod = useRef(false);
   const user = useSelector(selectCurrentUser);
   const items = useSelector(selectCartItems);
   const total = useSelector(selectCartTotal);
@@ -43,8 +46,15 @@ const Checkout = () => {
   const [payMethod, setPayMethod] = useState('mercadopago');
 
   useEffect(() => {
+    if (!settings || appliedMethod.current) return;
+    const enabled = Boolean(settings.transferenciaActiva && settings.transferenciaAlias?.trim());
+    if (requestedMethod === 'transferencia' && enabled) setPayMethod('transferencia');
+    appliedMethod.current = true;
+  }, [settings, requestedMethod]);
+
+  useEffect(() => {
     const enabled = Boolean(settings?.transferenciaActiva && settings?.transferenciaAlias?.trim());
-    if (payMethod === 'transferencia' && !enabled) setPayMethod('mercadopago');
+    if (payMethod === 'transferencia' && settings && !enabled) setPayMethod('mercadopago');
   }, [payMethod, settings]);
   // Lógica de cotización conservada (desuso mientras ENABLE_SHIPPING_QUOTE = false)
   const [quoteShipping, { isLoading: isQuoting }] = useQuoteShippingMutation();

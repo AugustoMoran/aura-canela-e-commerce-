@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useGetProductQuery, useGetRelatedProductsQuery } from '../services/productsApi';
+import { useGetSiteSettingsQuery } from '../services/siteSettingsApi';
 import { useToggleFavoriteMutation, useGetMeQuery } from '../services/authApi';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '../features/auth/authSlice';
 import ProductCard from '../components/products/ProductCard';
 import { HiOutlineHeart, HiHeart, HiChevronLeft, HiOutlineFilm, HiChevronRight, HiOutlineShoppingCart } from 'react-icons/hi';
-import { FaWhatsapp, FaCreditCard } from 'react-icons/fa';
+import { FaWhatsapp, FaCreditCard, FaUniversity } from 'react-icons/fa';
 import { STORE, waMeUrl } from '../config/storeContact';
 import { sellableStock, variantStock, usesVariants } from '../utils/productStock';
 import { formatCurrency } from '../utils/formatCurrency';
@@ -21,6 +22,7 @@ const ProductDetail = () => {
   const { addToCart } = useCart();
   const user = useSelector(selectCurrentUser);
   const { data: product, isLoading, error } = useGetProductQuery(id);
+  const { data: settings } = useGetSiteSettingsQuery();
   const { data: related = [] } = useGetRelatedProductsQuery(id, { skip: !product });
   const { data: me } = useGetMeQuery(undefined, { skip: !user });
   const [toggleFavorite] = useToggleFavoriteMutation();
@@ -49,6 +51,10 @@ const ProductDetail = () => {
   const totalSellable = product ? sellableStock(product) : 0;
   const categoriaId = product?.categoria?._id || product?.categoria;
   const packsHref = categoriaId ? `/productos?categoria=${categoriaId}` : '/productos';
+  const transferEnabled = Boolean(settings?.transferenciaActiva && settings?.transferenciaAlias?.trim());
+  const transferPct = transferEnabled
+    ? Math.min(100, Math.max(0, Number(settings.transferenciaDescuento) || 0))
+    : 0;
 
   const requireVariant = () => {
     if ((needsTalla && !selectedTalla) || (needsColor && !selectedColor)) {
@@ -191,15 +197,26 @@ const ProductDetail = () => {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">{product.nombre}</h1>
 
           {sellsByUnit && (
-            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-4">
-              <span className="text-3xl font-extrabold text-gray-900">{formatCurrency(product.precioOferta || product.precio)}</span>
-              {product.precioOferta && product.precioOferta < product.precio && (
-                <>
-                  <span className="text-lg text-gray-400 line-through">{formatCurrency(product.precio)}</span>
-                  <span className="badge bg-primary-100 text-primary-700 font-bold">
-                    -{Math.round(((product.precio - product.precioOferta) / product.precio) * 100)}%
-                  </span>
-                </>
+            <div className="mb-4">
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <span className="text-3xl font-extrabold text-gray-900">{formatCurrency(product.precioOferta || product.precio)}</span>
+                {product.precioOferta && product.precioOferta < product.precio && (
+                  <>
+                    <span className="text-lg text-gray-400 line-through">{formatCurrency(product.precio)}</span>
+                    <span className="badge bg-primary-100 text-primary-700 font-bold">
+                      -{Math.round(((product.precio - product.precioOferta) / product.precio) * 100)}%
+                    </span>
+                  </>
+                )}
+              </div>
+              {transferEnabled && (
+                <p className="mt-2 text-sm text-amber-800">
+                  {transferPct > 0
+                    ? `${formatCurrency(Math.round((product.precioOferta || product.precio) * (1 - transferPct / 100)))} por transferencia (${transferPct}% de descuento). `
+                    : 'También podés pagar por transferencia. '}
+                  Alias {settings.transferenciaAlias}
+                  {settings.transferenciaTitular ? ` · ${settings.transferenciaTitular}` : ''}
+                </p>
               )}
             </div>
           )}
@@ -333,6 +350,25 @@ const ProductDetail = () => {
                     <FaCreditCard size={20} />
                     Pagar con Mercado Pago
                   </button>
+                  {transferEnabled && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!requireVariant()) return;
+                        if (availableNow < qty) {
+                          toast.error('No hay suficiente stock de esa combinación');
+                          return;
+                        }
+                        addToCart(product, qty, selectedTalla, selectedColor);
+                        navigate('/checkout?metodo=transferencia');
+                      }}
+                      disabled={(needsTalla && !selectedTalla) || (needsColor && !selectedColor)}
+                      className="w-full flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-bold px-6 py-3 rounded-xl transition-all disabled:opacity-50"
+                    >
+                      <FaUniversity size={20} />
+                      Pagar por transferencia
+                    </button>
+                  )}
                 </>
               )}
               <a
