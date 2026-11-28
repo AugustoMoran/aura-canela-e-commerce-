@@ -415,13 +415,25 @@ const Checkout = () => {
           <div className="card p-6 sticky top-20">
             <h2 className="font-semibold text-lg mb-4">Resumen</h2>
             <ul className="divide-y divide-gray-100 mb-4">
-              {items.map((item) => {
-                const price = item.producto?.precioOferta || item.producto?.precio || 0;
-                const nombre = item.producto?.nombre || '';
+              {items.map((item, index) => {
+                const isPack = Boolean(item.isPack || item.packInfo?.packId);
+                const price = isPack
+                  ? Number(item.packInfo?.precioPack) || 0
+                  : Number(item.producto?.precioOferta || item.producto?.precio) || 0;
+                const nombre = isPack
+                  ? (item.packInfo?.nombrePack || 'Pack')
+                  : (item.producto?.nombre || 'Producto');
+                const qty = item.cantidad || 1;
+                const key = isPack
+                  ? (item._cartKey || item._id || item.packInfo?.packId || `pack-${index}`)
+                  : (item.producto?._id || item.producto || `item-${index}`);
                 return (
-                  <li key={item.producto?._id || item.producto} className="py-2 flex justify-between text-sm">
-                    <span className="text-gray-600 truncate max-w-[60%]">{nombre} <span className="text-gray-400">x{item.cantidad}</span></span>
-                    <span className="font-medium">{formatCurrency(price * item.cantidad)}</span>
+                  <li key={key} className="py-2 flex justify-between gap-3 text-sm">
+                    <span className="text-gray-600 min-w-0">
+                      <span className="line-clamp-2">{nombre}</span>
+                      <span className="text-gray-400">x{qty}</span>
+                    </span>
+                    <span className="font-medium shrink-0">{formatCurrency(price * qty)}</span>
                   </li>
                 );
               })}
