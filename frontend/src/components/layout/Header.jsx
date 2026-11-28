@@ -28,6 +28,7 @@ const Header = () => {
   const bannerActive = settings?.announcementActive;
   
   const [search, setSearch] = useState('');
+  const [accountOpen, setAccountOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const suggestionsRef = useRef(null);
@@ -73,7 +74,7 @@ const Header = () => {
         className={`fixed left-0 right-0 z-50 transition-all duration-300 ${
           scrolled ? 'top-0' : (bannerActive ? 'top-8' : 'top-0')
         } ${
-          scrolled ? 'bg-natural/95 backdrop-blur-md shadow-md py-1' : 'bg-natural py-4 border-b border-natural-dark'
+          scrolled ? 'bg-natural/95 backdrop-blur-md shadow-md py-1' : 'bg-natural py-2 sm:py-4 border-b border-natural-dark'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -117,7 +118,7 @@ const Header = () => {
                 <img 
                   src="/logo.png" 
                   alt="Aura Canela Logo" 
-                  className={`transition-all duration-300 object-contain ${scrolled ? 'h-8 sm:h-10' : 'h-16 sm:h-20'}`}
+                  className={`transition-all duration-300 object-contain ${scrolled ? 'h-8 sm:h-10' : 'h-11 sm:h-16 lg:h-20'}`}
                 />
               </Link>
             </div>
@@ -181,10 +182,20 @@ const Header = () => {
 
               {/* User Dropdown */}
               <div className="relative group">
-                <button className={`p-2 transition-colors ${isAuthenticated ? 'text-primary-600' : 'text-ink'}`}>
+                <button
+                  type="button"
+                  onClick={() => setAccountOpen((open) => !open)}
+                  className={`p-2 transition-colors ${isAuthenticated ? 'text-primary-600' : 'text-ink'}`}
+                  aria-label="Cuenta"
+                >
                   <HiOutlineUser size={24} />
                 </button>
-                <div className="absolute right-0 top-full mt-1 w-56 bg-white rounded-xl shadow-2xl border border-natural-dark py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden">
+                <div
+                  onClick={(e) => {
+                    if (e.target.closest('a, button')) setAccountOpen(false);
+                  }}
+                  className={`absolute right-0 top-full mt-1 w-56 bg-white rounded-xl shadow-2xl border border-natural-dark py-2 transition-all duration-200 z-50 overflow-hidden ${accountOpen ? 'opacity-100 visible' : 'opacity-0 invisible'} sm:group-hover:opacity-100 sm:group-hover:visible`}
+                >
                   {isAuthenticated ? (
                     <>
                       <div className="px-4 py-2 border-b border-natural mb-1">
@@ -235,13 +246,27 @@ const Header = () => {
       />
       
       {/* Mobile Menu Drawer */}
-      <div className={`fixed top-0 left-0 w-80 h-full bg-white z-[101] shadow-2xl transition-transform duration-300 transform lg:hidden flex flex-col ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`fixed top-0 left-0 w-[min(20rem,92vw)] h-full bg-white z-[101] shadow-2xl transition-transform duration-300 transform lg:hidden flex flex-col ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-6 border-b border-natural flex items-center justify-between bg-natural/20">
           <img src="/logo.png" alt="Aura Canela Logo" className="h-10 w-auto" />
           <button onClick={() => dispatch(closeMenu())} className="p-2 text-ink bg-white rounded-full shadow-sm"><HiX size={24} /></button>
         </div>
         
         <div className="p-6 flex-1 overflow-y-auto">
+          <form onSubmit={handleSearch} className="mb-4">
+            <div className="relative">
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar productos..."
+                className="w-full bg-natural border border-natural-dark rounded-full pl-4 pr-10 py-2.5 text-sm outline-none focus:ring-1 focus:ring-primary-600"
+              />
+              <button type="submit" className="absolute right-0 top-0 h-full px-3 text-ink" aria-label="Buscar">
+                <HiOutlineSearch size={18} />
+              </button>
+            </div>
+          </form>
           <nav className="flex flex-col gap-1">
             <Link to="/" onClick={() => dispatch(closeMenu())} className="py-4 text-lg font-black text-ink uppercase tracking-wider border-b border-natural">Inicio</Link>
             <Link to="/#packs" onClick={() => dispatch(closeMenu())} className="py-4 text-lg font-black text-primary-600 uppercase tracking-wider border-b border-natural">Packs</Link>

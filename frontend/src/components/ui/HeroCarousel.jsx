@@ -47,7 +47,7 @@ const HeroCarousel = () => {
   // Mientras carga, no mostrar defaults: evita el flash de imágenes de Unsplash
   if (isLoading || (isFetching && !apiBanners)) {
     return (
-      <div className="w-full aspect-[21/9] sm:aspect-[21/7] bg-natural animate-pulse" />
+      <div className="w-full aspect-[5/3] sm:aspect-[21/7] bg-natural animate-pulse" />
     );
   }
 
@@ -90,6 +90,12 @@ const HeroCarousel = () => {
           width: 24px;
           border-radius: 5px;
         }
+        @media (max-width: 639px) {
+          .hero-slider .swiper-button-next,
+          .hero-slider .swiper-button-prev {
+            display: none;
+          }
+        }
       `}</style>
       <Swiper
         modules={[Autoplay, Navigation, Pagination, EffectFade]}
@@ -99,7 +105,7 @@ const HeroCarousel = () => {
         navigation
         pagination={{ clickable: true }}
         loop={slides.length > 1}
-        className="w-full aspect-[21/9] sm:aspect-[21/7]"
+        className="w-full aspect-[5/3] sm:aspect-[21/7]"
       >
         {slides.map((slide) => (
           <SwiperSlide key={slide._id}>
@@ -126,14 +132,16 @@ const HeroCarousel = () => {
               <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent" />
               
               {slide.mostrarTexto && (
-                <div className="absolute inset-0 flex items-center px-8 sm:px-16 md:px-24">
+                <div className="absolute inset-0 flex items-end sm:items-center px-5 pb-8 sm:px-16 sm:pb-0 md:px-24">
                   <div className="max-w-2xl text-white">
-                    <h1 className="text-4xl sm:text-6xl font-black uppercase tracking-tighter mb-4 animate-slide-up">
+                    <h1 className="text-3xl sm:text-6xl font-black uppercase tracking-tighter mb-2 sm:mb-4 animate-slide-up">
                       {slide.titulo}
                     </h1>
-                    <p className="text-lg sm:text-2xl text-natural/90 mb-8 font-medium max-w-lg">
-                      {slide.subtitulo}
-                    </p>
+                    {slide.subtitulo ? (
+                      <p className="text-sm sm:text-2xl text-natural/90 mb-4 sm:mb-8 font-medium max-w-lg">
+                        {slide.subtitulo}
+                      </p>
+                    ) : null}
                     {slide.mostrarBoton && (
                       <Link
                         to={slide.ctaLink || '/productos'}

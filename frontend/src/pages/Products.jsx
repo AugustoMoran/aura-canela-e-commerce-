@@ -32,6 +32,16 @@ const Products = () => {
   const [pagesMap, setPagesMap] = useState({});
   const [activeKey, setActiveKey] = useState(filterKey);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const activeFilterCount = [categoria, talla, color, conStock ? '1' : '', sort !== 'newest' ? sort : ''].filter(Boolean).length;
+
+  useEffect(() => {
+    if (!filtersOpen) return undefined;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [filtersOpen]);
 
   if (activeKey !== filterKey) {
     setActiveKey(filterKey);
@@ -89,10 +99,10 @@ const Products = () => {
   const clearFilters = () => setSearchParams({}, { replace: true });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div className="flex items-end justify-between gap-3 mb-4 sm:mb-6">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
             {search
               ? `Resultados para "${search}"`
               : selectedCategoryName
@@ -104,17 +114,50 @@ const Products = () => {
           </p>
         </div>
         <button
-          onClick={() => setFiltersOpen(!filtersOpen)}
-          className="md:hidden flex items-center gap-2 btn-secondary text-sm"
+          onClick={() => setFiltersOpen(true)}
+          className="md:hidden relative flex items-center gap-2 border-2 border-gray-900 text-gray-900 font-semibold px-3 py-2 rounded-xl text-sm shrink-0"
         >
           <HiAdjustments size={16} />
           Filtros
+          {activeFilterCount > 0 && (
+            <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-[10px] font-black h-5 min-w-5 px-1 rounded-full flex items-center justify-center">
+              {activeFilterCount}
+            </span>
+          )}
         </button>
       </div>
 
-      <div className="flex gap-6">
-        <aside className={`w-56 flex-shrink-0 ${filtersOpen ? 'block' : 'hidden md:block'}`}>
-          <div className="card p-4 sticky top-20 space-y-5">
+      <div className="md:flex md:gap-6">
+        {filtersOpen && (
+          <button
+            type="button"
+            className="md:hidden fixed inset-0 z-[60] bg-black/50"
+            aria-label="Cerrar filtros"
+            onClick={() => setFiltersOpen(false)}
+          />
+        )}
+        <aside
+          className={`${
+            filtersOpen
+              ? 'fixed inset-x-0 bottom-0 z-[70] flex max-h-[88vh] flex-col rounded-t-3xl bg-white shadow-2xl'
+              : 'hidden'
+          } md:static md:z-auto md:flex md:w-56 md:max-h-none md:flex-shrink-0 md:rounded-none md:bg-transparent md:shadow-none`}
+        >
+          <div className="md:hidden flex justify-center pt-2">
+            <span className="h-1 w-10 rounded-full bg-gray-300" />
+          </div>
+          <div className="md:hidden flex items-center justify-between px-4 pt-2 pb-2 border-b border-gray-100">
+            <h2 className="text-base font-bold text-gray-900">Filtros</h2>
+            <button
+              type="button"
+              onClick={() => setFiltersOpen(false)}
+              className="p-2 -mr-2 text-gray-700"
+              aria-label="Cerrar"
+            >
+              <HiX size={22} />
+            </button>
+          </div>
+          <div className="bg-white p-4 pb-6 space-y-5 overflow-y-auto flex-1 min-h-0 md:sticky md:top-24 md:rounded-2xl md:shadow-md md:overflow-visible md:pb-4">
             <div>
               <h3 className="font-semibold text-sm mb-3">Ordenar por</h3>
               <div className="space-y-1">
@@ -123,7 +166,7 @@ const Products = () => {
                     key={opt.value}
                     type="button"
                     onClick={() => updateFilter('sort', opt.value === 'newest' ? '' : opt.value)}
-                    className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                    className={`w-full text-left px-3 py-2.5 md:py-1.5 rounded-lg text-sm transition-colors ${
                       sort === opt.value ? 'bg-primary-50 text-primary-700 font-medium' : 'hover:bg-gray-50'
                     }`}
                   >
@@ -153,7 +196,7 @@ const Products = () => {
                       key={t}
                       type="button"
                       onClick={() => updateFilter('talla', talla === t ? '' : t)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${
+                      className={`px-3 py-2 rounded-lg text-sm font-bold border ${
                         talla === t ? 'border-primary-600 bg-primary-50 text-primary-700' : 'border-gray-200'
                       }`}
                     >
@@ -173,7 +216,7 @@ const Products = () => {
                       key={c}
                       type="button"
                       onClick={() => updateFilter('color', color === c ? '' : c)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${
+                      className={`px-3 py-2 rounded-lg text-sm font-bold border ${
                         color === c ? 'border-primary-600 bg-primary-50 text-primary-700' : 'border-gray-200'
                       }`}
                     >
@@ -191,7 +234,7 @@ const Products = () => {
                   <button
                     type="button"
                     onClick={() => updateFilter('categoria', '')}
-                    className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                    className={`w-full text-left px-3 py-2.5 md:py-1.5 rounded-lg text-sm transition-colors ${
                       !categoria ? 'bg-primary-50 text-primary-700 font-medium' : 'hover:bg-gray-50'
                     }`}
                   >
@@ -202,7 +245,7 @@ const Products = () => {
                       key={cat._id}
                       type="button"
                       onClick={() => updateFilter('categoria', cat._id)}
-                      className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                      className={`w-full text-left px-3 py-2.5 md:py-1.5 rounded-lg text-sm transition-colors ${
                         categoria === cat._id ? 'bg-primary-50 text-primary-700 font-medium' : 'hover:bg-gray-50'
                       }`}
                     >
@@ -217,11 +260,18 @@ const Products = () => {
               <button
                 type="button"
                 onClick={clearFilters}
-                className="w-full flex items-center gap-2 text-primary-600 text-sm hover:text-primary-700"
+                className="w-full flex items-center justify-center gap-2 text-primary-600 text-sm hover:text-primary-700 py-2"
               >
                 <HiX size={14} /> Limpiar filtros
               </button>
             )}
+            <button
+              type="button"
+              onClick={() => setFiltersOpen(false)}
+              className="md:hidden btn-primary w-full"
+            >
+              Ver productos
+            </button>
           </div>
         </aside>
 
@@ -242,7 +292,7 @@ const Products = () => {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4">
                 {allProducts.map((p) => (
                   <ProductCard key={p._id} product={p} />
                 ))}

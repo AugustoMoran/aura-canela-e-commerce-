@@ -57,7 +57,7 @@ const Home = () => {
               Ver todo <HiArrowRight size={16} />
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-4">
             {(featuredData?.products || []).map((p) => <ProductCard key={p._id} product={p} />)}
           </div>
         </section>
@@ -87,7 +87,7 @@ const Home = () => {
               Ver todo <HiArrowRight size={16} />
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-4">
             {(newData?.products || []).map((p) => <ProductCard key={p._id} product={p} />)}
           </div>
         </section>
@@ -100,9 +100,18 @@ const Home = () => {
               <h2 className="text-3xl sm:text-4xl font-black mb-4 uppercase tracking-tighter drop-shadow-sm">¡Comprá con confianza!</h2>
               <p className="text-white/90 text-lg max-w-lg">Los packs son la forma más conveniente de armar tu pedido. Pagá por Mercado Pago o coordiná por WhatsApp.</p>
             </div>
-            <Link to="/#packs" className="relative z-10 bg-primary-600 text-white font-black px-10 py-5 rounded-2xl hover:bg-primary-700 transition-all whitespace-nowrap flex-shrink-0 shadow-[0_0_20px_rgba(225,29,138,0.4)] uppercase tracking-widest text-sm">
+            <a
+              href="#packs"
+              onClick={(e) => {
+                const section = document.getElementById('packs');
+                if (!section) return;
+                e.preventDefault();
+                section.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="relative z-10 bg-primary-600 text-white font-black px-10 py-5 rounded-2xl hover:bg-primary-700 transition-all whitespace-nowrap flex-shrink-0 shadow-[0_0_20px_rgba(225,29,138,0.4)] uppercase tracking-widest text-sm"
+            >
               Ver packs
-            </Link>
+            </a>
           </div>
         </section>
       </div>

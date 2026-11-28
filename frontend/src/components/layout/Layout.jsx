@@ -12,7 +12,7 @@ const Layout = () => {
     <div className="min-h-screen flex flex-col">
       <ScrollingBanner />
       <Header />
-      <main className="flex-1 pt-16">
+      <main className="flex-1 pt-28 sm:pt-32">
         <Outlet />
       </main>
       <Footer />

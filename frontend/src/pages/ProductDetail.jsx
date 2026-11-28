@@ -98,8 +98,8 @@ const ProductDetail = () => {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
+      <div className="flex items-center gap-2 text-sm text-gray-500 mb-4 sm:mb-6 min-w-0">
         <Link to="/productos" className="flex items-center gap-1 hover:text-primary-600">
           <HiChevronLeft size={16} /> Productos
         </Link>
@@ -109,7 +109,7 @@ const ProductDetail = () => {
         <span className="text-gray-900 font-medium truncate max-w-[200px]">{product.nombre}</span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-16">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 mb-12 sm:mb-16">
         <div>
           <div className="rounded-2xl overflow-hidden bg-white mb-3 relative group aspect-square">
             {media[selectedImage]?.type === 'video' ? (
@@ -135,13 +135,13 @@ const ProductDetail = () => {
               <>
                 <button
                   onClick={() => setSelectedImage((prev) => (prev === 0 ? media.length - 1 : prev - 1))}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10"
                 >
                   <HiChevronLeft size={24} />
                 </button>
                 <button
                   onClick={() => setSelectedImage((prev) => (prev === media.length - 1 ? 0 : prev + 1))}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10"
                 >
                   <HiChevronRight size={24} />
                 </button>
@@ -191,7 +191,7 @@ const ProductDetail = () => {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">{product.nombre}</h1>
 
           {sellsByUnit && (
-            <div className="flex items-baseline gap-3 mb-4">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-4">
               <span className="text-3xl font-extrabold text-gray-900">{formatCurrency(product.precioOferta || product.precio)}</span>
               {product.precioOferta && product.precioOferta < product.precio && (
                 <>

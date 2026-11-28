@@ -37,7 +37,7 @@ const ProductCard = ({ product }) => {
   };
 
   return (
-    <Link to={`/productos/${product._id}`} className="bg-white rounded-2xl overflow-hidden group shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col h-full border border-natural-dark">
+    <Link to={`/productos/${product._id}`} className="bg-white rounded-xl sm:rounded-2xl overflow-hidden group shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col h-full border border-natural-dark">
       {/* Image */}
       <div className="relative overflow-hidden aspect-[4/5] bg-natural/30">
         <img
@@ -47,7 +47,7 @@ const ProductCard = ({ product }) => {
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
         {hasDiscount && (
-          <span className="absolute top-3 left-3 bg-primary-600 text-white font-black text-[10px] px-2 py-1 rounded-full uppercase tracking-widest shadow-lg">
+          <span className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-primary-600 text-white font-black text-[10px] px-2 py-1 rounded-full uppercase tracking-widest shadow-lg">
             -{Math.round(((product.precio - product.precioOferta) / product.precio) * 100)}% OFF
           </span>
         )}
@@ -55,7 +55,7 @@ const ProductCard = ({ product }) => {
         {/* Favorite */}
         <button
           onClick={handleFavorite}
-          className="absolute top-3 right-3 w-9 h-9 bg-white/80 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center transition-all hover:bg-white hover:scale-110 z-10"
+          className="absolute top-2 right-2 sm:top-3 sm:right-3 w-8 h-8 sm:w-9 sm:h-9 bg-white/80 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center transition-all hover:bg-white hover:scale-110 z-10"
         >
           {isFavorite ? (
             <HiHeart size={18} className="text-primary-600" />
@@ -84,9 +84,9 @@ const ProductCard = ({ product }) => {
       </div>
 
       {/* Info */}
-      <div className="p-4 flex-1 flex flex-col bg-white">
-        <p className="text-[10px] text-primary-600 font-bold mb-1 uppercase tracking-widest">{product.categoria?.nombre || 'General'}</p>
-        <h3 className="font-bold text-sm line-clamp-2 mb-3 text-ink group-hover:text-primary-600 transition-colors flex-1 leading-tight">
+      <div className="p-2.5 sm:p-4 flex-1 flex flex-col bg-white">
+        <p className="text-[10px] text-primary-600 font-bold mb-1 uppercase tracking-widest truncate">{product.categoria?.nombre || 'General'}</p>
+        <h3 className="font-bold text-[13px] sm:text-sm line-clamp-2 mb-2 sm:mb-3 text-ink group-hover:text-primary-600 transition-colors flex-1 leading-tight">
           {product.nombre}
         </h3>
         {sellsByUnit ? (
@@ -95,7 +95,7 @@ const ProductCard = ({ product }) => {
               <span className="text-xs text-gray-400 line-through font-medium">{formatCurrency(product.precio)}</span>
             )}
             <div className="flex items-center justify-between">
-              <span className="font-black text-xl text-primary-700 tracking-tighter">
+              <span className="font-black text-base sm:text-xl text-primary-700 tracking-tighter">
                 {formatCurrency(displayPrice)}
               </span>
               {inStock && !usesVariants(product) && (
