@@ -1,5 +1,5 @@
-import React, { Suspense, lazy, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { Suspense, lazy, useEffect, useLayoutEffect } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectCurrentUser, selectIsAdmin } from './features/auth/authSlice';
 import { useGetCartQuery } from './services/cartApi';
@@ -62,6 +62,45 @@ const Loading = () => (
   </div>
 );
 
+const ScrollToTop = () => {
+  const { pathname, hash } = useLocation();
+
+  useLayoutEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+
+    const jumpToTop = () => {
+      const root = document.documentElement;
+      const previous = root.style.scrollBehavior;
+      root.style.scrollBehavior = 'auto';
+      window.scrollTo(0, 0);
+      root.scrollTop = 0;
+      document.body.scrollTop = 0;
+      root.style.scrollBehavior = previous;
+    };
+
+    if (!hash) {
+      jumpToTop();
+      return;
+    }
+
+    const target = document.getElementById(decodeURIComponent(hash.slice(1)));
+    if (target) {
+      target.scrollIntoView();
+      return;
+    }
+
+    jumpToTop();
+    const timer = window.setTimeout(() => {
+      document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView({ behavior: 'smooth' });
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [pathname, hash]);
+
+  return null;
+};
+
 const CartInitializer = () => {
   const dispatch = useDispatch();
   const user = useSelector(selectCurrentUser);
@@ -73,6 +112,8 @@ const CartInitializer = () => {
 };
 
 const App = () => (
+  <>
+  <ScrollToTop />
   <Suspense fallback={<Loading />}>
     <CartInitializer />
     <Routes>
@@ -119,6 +160,7 @@ const App = () => (
       <Route path="*" element={<NotFound />} />
     </Routes>
   </Suspense>
+  </>
 );
 
 export default App;
