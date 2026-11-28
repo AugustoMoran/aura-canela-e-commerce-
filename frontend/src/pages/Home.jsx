@@ -49,8 +49,6 @@ const Home = () => {
       <HeroCarousel />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <HomePacks />
-
         {/* Featured products */}
         <section className="py-8">
           <div className="flex items-center justify-between mb-6">
@@ -79,6 +77,19 @@ const Home = () => {
           </section>
         )}
 
+        {/* New products */}
+        <section className="py-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Novedades</h2>
+            <Link to="/productos?sort=newest" className="text-gray-900 hover:text-gray-600 text-sm font-semibold flex items-center gap-1">
+              Ver todo <HiArrowRight size={16} />
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {(newData?.products || []).map((p) => <ProductCard key={p._id} product={p} />)}
+          </div>
+        </section>
+
         {/* Banner CTA */}
         <section className="py-12">
           <div className="bg-[#F4A7C5] rounded-[40px] p-8 sm:p-16 flex flex-col sm:flex-row items-center justify-between gap-10 text-white border-2 border-primary-600/40 shadow-2xl relative overflow-hidden group">
@@ -93,18 +104,7 @@ const Home = () => {
           </div>
         </section>
 
-        {/* New products */}
-        <section className="py-8 pb-16">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Novedades</h2>
-            <Link to="/productos?sort=newest" className="text-gray-900 hover:text-gray-600 text-sm font-semibold flex items-center gap-1">
-              Ver todo <HiArrowRight size={16} />
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {(newData?.products || []).map((p) => <ProductCard key={p._id} product={p} />)}
-          </div>
-        </section>
+        <HomePacks />
       </div>
     </div>
   );
