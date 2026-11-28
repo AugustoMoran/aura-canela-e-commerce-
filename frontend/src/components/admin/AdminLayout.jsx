@@ -18,6 +18,7 @@ import {
   HiOutlineHome,
   HiOutlineChatAlt2,
   HiOutlineCog,
+  HiOutlineCash,
   HiOutlineBell,
   HiOutlineArchive,
 } from 'react-icons/hi';
@@ -34,6 +35,7 @@ const NAV_ITEMS = [
   { to: '/admin/cloudinary', label: 'Almacenamiento', icon: HiOutlinePhotograph },
   { to: '/admin/banners', label: 'Banners', icon: HiOutlineCollection },
   { to: '/admin/popup', label: 'Popup WhatsApp', icon: HiOutlineChatAlt2 },
+  { to: '/admin/transferencias', label: 'Transferencias', icon: HiOutlineCash },
   { to: '/admin/configuracion', label: 'Configuración', icon: HiOutlineCog },
 ];
 

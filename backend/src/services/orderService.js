@@ -2,6 +2,7 @@ const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Pack = require('../models/Pack');
 const Coupon = require('../models/Coupon');
+const SiteSettings = require('../models/SiteSettings');
 const generateOrderCode = require('../utils/generateOrderCode');
 const { variantStock, findVariant, hasVariantGrid } = require('../utils/productStock');
 const {
@@ -123,6 +124,24 @@ const createOrder = async ({ userId, guestData, items, cuponCodigo, metodoPago, 
     throw Object.assign(new Error('Elegí cómo recibir el pedido (envío, retiro o WhatsApp).'), { statusCode: 400 });
   }
 
+  let pagoTransferencia = undefined;
+  if (metodoPago === 'transferencia') {
+    const settings = await SiteSettings.findOne();
+    const alias = settings?.transferenciaAlias?.trim();
+    if (!settings?.transferenciaActiva || !alias) {
+      throw Object.assign(new Error('El pago por transferencia no está disponible.'), { statusCode: 400 });
+    }
+    const porcentaje = Math.min(100, Math.max(0, Number(settings.transferenciaDescuento) || 0));
+    const base = Math.max(0, subtotal - descuento);
+    descuento += Math.round(base * (porcentaje / 100));
+    pagoTransferencia = {
+      alias,
+      titular: settings.transferenciaTitular?.trim() || '',
+      cbu: settings.transferenciaCbu?.trim() || '',
+      porcentaje,
+    };
+  }
+
   const shippingCost = Math.max(0, Number(shipping.costo) || 0);
   const total = Math.max(0, subtotal - descuento) + shippingCost;
 
@@ -144,6 +163,7 @@ const createOrder = async ({ userId, guestData, items, cuponCodigo, metodoPago, 
     descuento,
     total,
     cupon: cuponCodigo ? cuponCodigo.toUpperCase() : null,
+    pagoTransferencia,
     metodoPago: metodoPago || 'pendiente',
     estadoPago: 'pendiente',
     estadoPedido: 'Recibido',
@@ -174,7 +194,9 @@ const createOrder = async ({ userId, guestData, items, cuponCodigo, metodoPago, 
   createNotification({
     tipo: 'pedido',
     titulo: 'Nuevo Pedido Recibido',
-    descripcion: `Se ha recibido el pedido ${order.codigo} por $${total}`,
+    descripcion: metodoPago === 'transferencia'
+      ? `Pedido ${order.codigo} por transferencia. Pendiente de comprobante. Total $${total}`
+      : `Se ha recibido el pedido ${order.codigo} por $${total}`,
     entidadRelacionada: 'Order',
     entidadId: order._id,
   }).catch(err => console.error('Error enviando notificación de pedido:', err));

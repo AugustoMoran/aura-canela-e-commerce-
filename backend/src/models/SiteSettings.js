@@ -25,7 +25,32 @@ const siteSettingsSchema = new mongoose.Schema(
     blackColor: {
       type: String,
       default: '#000000'
-    }
+    },
+    transferenciaActiva: {
+      type: Boolean,
+      default: false,
+    },
+    transferenciaAlias: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    transferenciaTitular: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    transferenciaCbu: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    transferenciaDescuento: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+    },
   },
   { timestamps: true }
 );

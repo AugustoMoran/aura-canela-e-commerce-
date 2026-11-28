@@ -27,3 +27,17 @@ export const generateWhatsAppLink = (items, total, phone) => {
   if (phone) return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
   return waMeUrl(message);
 };
+
+export const buildTransferReceiptMessage = ({ codigo, total, alias, titular, cbu }) => {
+  const lines = [
+    `Hola ${STORE.name}, ya realicé la transferencia de mi pedido.`,
+    '',
+    `Número de pedido: ${codigo}`,
+    `Importe transferido: ${formatCurrency(total || 0)}`,
+    `Alias: ${alias}`,
+  ];
+  if (titular) lines.push(`Titular: ${titular}`);
+  if (cbu) lines.push(`CBU/CVU: ${cbu}`);
+  lines.push('', 'Adjunto el comprobante de la transferencia.');
+  return lines.join('\n');
+};

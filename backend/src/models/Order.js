@@ -30,9 +30,15 @@ const orderSchema = new mongoose.Schema(
     descuento: { type: Number, default: 0 },
     total: { type: Number, required: true },
     cupon: { type: String, default: null },
+    pagoTransferencia: {
+      alias: { type: String, default: '' },
+      titular: { type: String, default: '' },
+      cbu: { type: String, default: '' },
+      porcentaje: { type: Number, default: 0 },
+    },
     metodoPago: {
       type: String,
-      enum: ['mercadopago', 'whatsapp', 'pendiente'],
+      enum: ['mercadopago', 'whatsapp', 'transferencia', 'pendiente'],
       default: 'pendiente',
     },
     estadoPago: {

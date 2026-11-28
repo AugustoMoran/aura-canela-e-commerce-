@@ -11,7 +11,15 @@ const PAGO_OPTIONS = ['pendiente', 'aprobado', 'rechazado', 'reembolsado'];
 const METODO_BADGE = {
   mercadopago: 'bg-blue-100 text-blue-700',
   whatsapp: 'bg-green-100 text-green-700',
+  transferencia: 'bg-amber-100 text-amber-800',
   pendiente: 'bg-gray-100 text-gray-600',
+};
+
+const METODO_LABEL = {
+  mercadopago: 'Mercado Pago',
+  whatsapp: 'WhatsApp',
+  transferencia: 'Transferencia',
+  pendiente: 'Pendiente',
 };
 
 const normalizeEstado = (estado) => {
@@ -121,7 +129,7 @@ const OrdersAdmin = () => {
                     </button>
                     <span className="font-mono font-bold text-primary-600">{order.codigo}</span>
                     <span className={`ml-2 text-[10px] px-2 py-0.5 rounded-full font-medium ${METODO_BADGE[order.metodoPago] || METODO_BADGE.pendiente}`}>
-                      {order.metodoPago}
+                      {METODO_LABEL[order.metodoPago] || order.metodoPago}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-gray-600 max-w-[160px]">
@@ -205,6 +213,17 @@ const OrdersAdmin = () => {
                           <p className="text-gray-500">{clienteEmail(order)}</p>
                           <p className="text-gray-500">{clienteTel(order)}</p>
                           <p className="text-gray-500">{order.guestData?.direccion || order.datosEnvio?.direccion || 'Sin dirección'}</p>
+                          {order.pagoTransferencia?.alias && (
+                            <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs space-y-1 text-amber-950">
+                              <p className="font-bold">Transferencia a verificar</p>
+                              <p>Alias: {order.pagoTransferencia.alias}</p>
+                              {order.pagoTransferencia.titular && <p>Titular: {order.pagoTransferencia.titular}</p>}
+                              {order.pagoTransferencia.cbu && <p>CBU/CVU: {order.pagoTransferencia.cbu}</p>}
+                              {order.pagoTransferencia.porcentaje > 0 && (
+                                <p>Descuento aplicado: {order.pagoTransferencia.porcentaje}%</p>
+                              )}
+                            </div>
+                          )}
                           <div className="rounded-xl bg-natural p-3 text-xs space-y-1">
                             <p><strong>Cómo lo recibe:</strong> {order.datosEnvio?.servicio || order.datosEnvio?.tipo || '—'}</p>
                             <p><strong>Costo envío:</strong> {formatCurrency(order.datosEnvio?.costo || 0)}</p>

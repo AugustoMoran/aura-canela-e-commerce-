@@ -38,6 +38,7 @@ const CloudinaryAdmin = lazy(() => import('./pages/admin/CloudinaryAdmin'));
 const BannersAdmin = lazy(() => import('./pages/admin/BannersAdmin'));
 const PopupAdmin = lazy(() => import('./pages/admin/PopupAdmin'));
 const SettingsAdmin = lazy(() => import('./pages/admin/SettingsAdmin'));
+const TransferAdmin = lazy(() => import('./pages/admin/TransferAdmin'));
 
 // Guards
 const ProtectedRoute = ({ children }) => {
@@ -112,6 +113,7 @@ const App = () => (
       <Route path="/admin/banners" element={<AdminRoute><BannersAdmin /></AdminRoute>} />
       <Route path="/admin/popup" element={<AdminRoute><PopupAdmin /></AdminRoute>} />
       <Route path="/admin/configuracion" element={<AdminRoute><SettingsAdmin /></AdminRoute>} />
+      <Route path="/admin/transferencias" element={<AdminRoute><TransferAdmin /></AdminRoute>} />
 
       {/* 404 */}
       <Route path="*" element={<NotFound />} />

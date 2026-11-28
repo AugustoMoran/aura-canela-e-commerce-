@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { selectCartItems, selectCartTotal, clearGuestCart } from '../features/cart/cartSlice';
 import { useCreateOrderMutation, useValidateCouponMutation } from '../services/ordersApi';
+import { useGetSiteSettingsQuery } from '../services/siteSettingsApi';
 import { useClearCartMutation } from '../services/cartApi';
 import { useQuoteShippingMutation } from '../services/shippingApi';
 import { selectCurrentUser } from '../features/auth/authSlice';
@@ -10,7 +11,7 @@ import { formatCurrency } from '../utils/formatCurrency';
 import { generateWhatsAppLink } from '../utils/generateWhatsAppLink';
 import { STORE } from '../config/storeContact';
 import toast from 'react-hot-toast';
-import { FaWhatsapp, FaCreditCard, FaTruck } from 'react-icons/fa';
+import { FaWhatsapp, FaCreditCard, FaTruck, FaUniversity } from 'react-icons/fa';
 
 const REQUIRED_GUEST_FIELDS = ['nombre', 'apellido', 'email', 'telefono'];
 
@@ -32,6 +33,7 @@ const Checkout = () => {
   const items = useSelector(selectCartItems);
   const total = useSelector(selectCartTotal);
   const [createOrder, { isLoading }] = useCreateOrderMutation();
+  const { data: settings } = useGetSiteSettingsQuery();
   const [clearCartApi] = useClearCartMutation();
   const [validateCoupon] = useValidateCouponMutation();
 
@@ -39,6 +41,11 @@ const Checkout = () => {
   const [couponCode, setCouponCode] = useState('');
   const [couponResult, setCouponResult] = useState(null);
   const [payMethod, setPayMethod] = useState('mercadopago');
+
+  useEffect(() => {
+    const enabled = Boolean(settings?.transferenciaActiva && settings?.transferenciaAlias?.trim());
+    if (payMethod === 'transferencia' && !enabled) setPayMethod('mercadopago');
+  }, [payMethod, settings]);
   // Lógica de cotización conservada (desuso mientras ENABLE_SHIPPING_QUOTE = false)
   const [quoteShipping, { isLoading: isQuoting }] = useQuoteShippingMutation();
   const [zipCode, setZipCode] = useState('');
@@ -97,9 +104,16 @@ const Checkout = () => {
   };
 
   const shippingCost = selectedShipping ? selectedShipping.costo : 0;
-  const finalTotal = couponResult
-    ? Math.max(0, total - couponResult.descuento) + shippingCost
-    : total + shippingCost;
+  const transferEnabled = Boolean(settings?.transferenciaActiva && settings?.transferenciaAlias?.trim());
+  const transferPct = transferEnabled
+    ? Math.min(100, Math.max(0, Number(settings.transferenciaDescuento) || 0))
+    : 0;
+  const couponDiscount = couponResult?.descuento || 0;
+  const afterCoupon = Math.max(0, total - couponDiscount);
+  const transferDiscount = payMethod === 'transferencia'
+    ? Math.round(afterCoupon * (transferPct / 100))
+    : 0;
+  const finalTotal = afterCoupon - transferDiscount + shippingCost;
 
   const handleApplyCoupon = async () => {
     try {
@@ -156,15 +170,33 @@ const Checkout = () => {
         return;
       }
 
-      if (metodoPago === 'whatsapp') {
-        // User committed to buy → clear cart immediately
+      if (metodoPago === 'whatsapp' || metodoPago === 'transferencia') {
         if (user) {
           await clearCartApi().unwrap().catch(() => {});
         } else {
           dispatch(clearGuestCart());
         }
+      }
+
+      if (metodoPago === 'whatsapp') {
         const waLink = generateWhatsAppLink(items, finalTotal);
         window.open(waLink, '_blank');
+      }
+
+      if (metodoPago === 'transferencia') {
+        const pago = result.order.pagoTransferencia || {};
+        const params = new URLSearchParams({
+          order: result.order._id,
+          codigo: result.order.codigo,
+          status: 'success',
+          metodo: 'transferencia',
+          total: String(result.order.total),
+          alias: pago.alias || '',
+          titular: pago.titular || '',
+          cbu: pago.cbu || '',
+        });
+        navigate(`/orden/confirmacion?${params.toString()}`);
+        return;
       }
 
       navigate(`/orden/confirmacion?order=${result.order._id}&codigo=${result.order.codigo}&status=success`);
@@ -339,9 +371,23 @@ const Checkout = () => {
                 <FaCreditCard size={20} className={payMethod === 'mercadopago' ? 'text-primary-600' : 'text-gray-400'} />
                 <div>
                   <p className="font-medium text-sm">Mercado Pago</p>
-                  <p className="text-xs text-gray-500">Tarjeta, efectivo, transferencia</p>
+                  <p className="text-xs text-gray-500">Tarjeta, dinero en cuenta o efectivo</p>
                 </div>
               </label>
+              {transferEnabled && (
+                <label className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${payMethod === 'transferencia' ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                  <input type="radio" value="transferencia" checked={payMethod === 'transferencia'} onChange={() => setPayMethod('transferencia')} className="sr-only" />
+                  <FaUniversity size={20} className={`mt-0.5 ${payMethod === 'transferencia' ? 'text-amber-700' : 'text-gray-400'}`} />
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm">Transferencia bancaria</p>
+                    <p className="text-xs text-gray-500">
+                      {transferPct > 0 ? `${transferPct}% de descuento sobre los productos. ` : ''}
+                      Alias {settings.transferenciaAlias}
+                      {settings.transferenciaTitular ? ` · ${settings.transferenciaTitular}` : ''}
+                    </p>
+                  </div>
+                </label>
+              )}
               <label className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${payMethod === 'whatsapp' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}>
                 <input type="radio" value="whatsapp" checked={payMethod === 'whatsapp'} onChange={() => setPayMethod('whatsapp')} className="sr-only" />
                 <FaWhatsapp size={20} className={payMethod === 'whatsapp' ? 'text-green-600' : 'text-gray-400'} />
@@ -377,6 +423,12 @@ const Checkout = () => {
                 <span>-{formatCurrency(couponResult.descuento)}</span>
               </div>
             )}
+            {transferDiscount > 0 && (
+              <div className="flex justify-between text-sm text-amber-700 mb-2">
+                <span>Descuento por transferencia ({transferPct}%)</span>
+                <span>-{formatCurrency(transferDiscount)}</span>
+              </div>
+            )}
             {selectedShipping && (
               <div className="flex justify-between text-sm text-gray-600 mb-2">
                 <span>{selectedShipping.nombre}</span>
@@ -389,17 +441,27 @@ const Checkout = () => {
               <span>{formatCurrency(finalTotal)}</span>
             </div>
 
+            {payMethod === 'transferencia' && (
+              <p className="text-xs text-gray-500 mb-4">
+                Al confirmar se crea el pedido con estado pendiente. Después transferís el total al alias y enviás el comprobante por WhatsApp.
+              </p>
+            )}
+
             <button
               onClick={() => handleOrder(payMethod)}
               disabled={isLoading}
               className={`w-full flex items-center justify-center gap-2 font-bold px-6 py-3 rounded-xl transition-all active:scale-95 disabled:opacity-50 ${
                 payMethod === 'whatsapp'
                   ? 'bg-green-500 hover:bg-green-400 text-white'
-                  : 'btn-primary'
+                  : payMethod === 'transferencia'
+                    ? 'bg-amber-600 hover:bg-amber-700 text-white'
+                    : 'btn-primary'
               }`}
             >
               {isLoading ? 'Procesando...' : payMethod === 'whatsapp' ? (
                 <><FaWhatsapp size={18} /> Comprar por WhatsApp</>
+              ) : payMethod === 'transferencia' ? (
+                <><FaUniversity size={18} /> Confirmar pedido por transferencia</>
               ) : (
                 <><FaCreditCard size={18} /> Pagar con Mercado Pago</>
               )}
