@@ -11,7 +11,7 @@ import usePageMeta from '../hooks/usePageMeta';
 const CategoryCard = ({ category }) => (
   <Link
     to={`/productos?categoria=${category._id}`}
-    className="group relative h-48 sm:h-64 rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500"
+    className="group relative h-28 sm:h-32 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-500"
   >
     {category.imagen ? (
       <img 
@@ -21,12 +21,12 @@ const CategoryCard = ({ category }) => (
       />
     ) : (
       <div className="w-full h-full bg-[#F4A7C5] flex items-center justify-center">
-        <span className="text-white font-bold text-4xl opacity-30">{category.nombre[0]}</span>
+        <span className="text-white font-bold text-2xl opacity-30">{category.nombre[0]}</span>
       </div>
     )}
     <div className="absolute inset-0 bg-gradient-to-t from-primary-700/55 via-primary-400/10 to-transparent group-hover:from-primary-700/75 transition-all" />
-    <div className="absolute bottom-0 left-0 right-0 p-4 transform translate-y-1 group-hover:translate-y-0 transition-transform">
-      <span className="block font-black text-white text-base sm:text-lg uppercase tracking-wider text-center drop-shadow-sm group-hover:scale-105 transition-transform">
+    <div className="absolute bottom-0 left-0 right-0 p-2 transform translate-y-1 group-hover:translate-y-0 transition-transform">
+      <span className="block font-black text-white text-xs sm:text-sm uppercase tracking-wider text-center drop-shadow-sm group-hover:scale-105 transition-transform">
         {category.nombre}
       </span>
       <div className="w-8 h-1 bg-white mx-auto mt-2 scale-x-0 group-hover:scale-x-100 transition-transform origin-center" />
@@ -62,16 +62,18 @@ const Home = () => {
           </div>
         </section>
 
+        <HomePacks />
+
         {/* Categories */}
         {categories.length > 0 && (
-          <section className="py-12">
-            <div className="flex items-center justify-between mb-6">
+          <section className="py-8">
+            <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold text-gray-900">Categorías</h2>
               <Link to="/productos" className="text-primary-600 hover:text-primary-700 text-sm font-medium flex items-center gap-1">
                 Ver todo <HiArrowRight size={16} />
               </Link>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
               {categories.map((cat) => <CategoryCard key={cat._id} category={cat} />)}
             </div>
           </section>
@@ -103,8 +105,6 @@ const Home = () => {
             </Link>
           </div>
         </section>
-
-        <HomePacks />
       </div>
     </div>
   );

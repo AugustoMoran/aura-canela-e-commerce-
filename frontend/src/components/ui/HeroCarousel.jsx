@@ -15,6 +15,8 @@ const DEFAULT_SLIDES = [
     titulo: 'Bienvenidos a Aura Canela',
     subtitulo: 'Moda exclusiva para vos',
     mostrarTexto: true,
+    mostrarBoton: true,
+    ctaTexto: 'Ver Colección',
     ctaLink: '/productos',
     esImagenValida: true
   },
@@ -24,6 +26,8 @@ const DEFAULT_SLIDES = [
     titulo: 'Nueva Temporada',
     subtitulo: 'Descubrí lo último en tendencias',
     mostrarTexto: true,
+    mostrarBoton: true,
+    ctaTexto: 'Ver Colección',
     ctaLink: '/productos',
     esImagenValida: true
   }
@@ -130,12 +134,14 @@ const HeroCarousel = () => {
                     <p className="text-lg sm:text-2xl text-natural/90 mb-8 font-medium max-w-lg">
                       {slide.subtitulo}
                     </p>
-                    <Link
-                      to={slide.ctaLink || '/productos'}
-                      className="inline-block bg-primary-600 hover:bg-primary-700 text-white font-black px-8 py-4 rounded-xl transition-all transform hover:scale-105 active:scale-95 uppercase tracking-widest text-sm shadow-2xl"
-                    >
-                      Ver Colección
-                    </Link>
+                    {slide.mostrarBoton && (
+                      <Link
+                        to={slide.ctaLink || '/productos'}
+                        className="inline-block bg-primary-600 hover:bg-primary-700 text-white font-black px-8 py-4 rounded-xl transition-all transform hover:scale-105 active:scale-95 uppercase tracking-widest text-sm shadow-2xl"
+                      >
+                        {slide.ctaTexto || 'Ver Colección'}
+                      </Link>
+                    )}
                   </div>
                 </div>
               )}
